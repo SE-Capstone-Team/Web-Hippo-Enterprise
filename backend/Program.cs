@@ -10,15 +10,7 @@ if (string.IsNullOrWhiteSpace(projectId))
     throw new InvalidOperationException("Firestore project ID is not configured. Set 'Firestore:ProjectId' in configuration or the 'GOOGLE_CLOUD_PROJECT' environment variable.");
 }
 
-var databaseId = builder.Configuration["Firestore:DatabaseId"] ??
-                Environment.GetEnvironmentVariable("FIRESTORE_DATABASE_ID");
-
-if (string.IsNullOrWhiteSpace(databaseId))
-{
-    throw new InvalidOperationException("Firestore database ID is not configured. Set 'Firestore:DatabaseId' in configuration.");
-}
-
-builder.Services.AddSingleton(_ => new FirestoreDbBuilder { ProjectId = projectId, DatabaseId = databaseId }.Build());
+builder.Services.AddSingleton(_ => FirestoreDb.Create(projectId));
 builder.Services.AddSingleton<FsProfiles>();
 builder.Services.AddSingleton<FsItems>();
 
@@ -26,6 +18,15 @@ var app = builder.Build();
 
 app.Urls.Add("http://localhost:8000");
 
+// Configure static file serving for the frontend
+var frontendPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "frontend", "src");
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(frontendPath),
+    RequestPath = ""
+});
+
+// API routes
 app.MapPost("/api/users", async (UserProfile profile, FsProfiles profiles, CancellationToken cancellationToken) =>
 {
     var created = await profiles.CreateAsync(profile, cancellationToken);
@@ -76,8 +77,17 @@ app.MapDelete("/api/items/{itemId}", async (string itemId, FsItems items, Cancel
     return deleted ? Results.NoContent() : Results.NotFound();
 });
 
-app.MapGet("/", () => Results.Content(
-    "<html><body><h1>Welcome to Hippo Exchange!</h1></body></html>",
-    "text/html"));
+// Serve index.html for the root route and handle SPA routing
+app.MapFallback(async context =>
+{
+    
+    // For root or any non-API route, serve index.html
+    var indexPath = Path.Combine(frontendPath, "index.html");
+    if (File.Exists(indexPath))
+    {
+        context.Response.ContentType = "text/html";
+        await context.Response.SendFileAsync(indexPath);
+    }
+});
 
 app.Run();

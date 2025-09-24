@@ -1178,40 +1178,32 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Unwis\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "/Users/connorsherrill/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Unwis\\OneDrive - Tennessee Tech University\\Web-Hippo-Enterprise\\backend\\backend.csproj",
+      "projectUniqueName": "/Users/connorsherrill/Projects/Web-Hippo-Enterprise/backend/backend.csproj",
       "projectName": "backend",
-      "projectPath": "C:\\Users\\Unwis\\OneDrive - Tennessee Tech University\\Web-Hippo-Enterprise\\backend\\backend.csproj",
-      "packagesPath": "C:\\Users\\Unwis\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Unwis\\OneDrive - Tennessee Tech University\\Web-Hippo-Enterprise\\backend\\obj\\",
+      "projectPath": "/Users/connorsherrill/Projects/Web-Hippo-Enterprise/backend/backend.csproj",
+      "packagesPath": "/Users/connorsherrill/.nuget/packages/",
+      "outputPath": "/Users/connorsherrill/Projects/Web-Hippo-Enterprise/backend/obj/",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\Unwis\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "/Users/connorsherrill/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
-            "C:\\Users\\Unwis\\OneDrive - Tennessee Tech University\\Web-Hippo-Enterprise\\backend\\Data.Firestore\\Data.Firestore.csproj": {
-              "projectPath": "C:\\Users\\Unwis\\OneDrive - Tennessee Tech University\\Web-Hippo-Enterprise\\backend\\Data.Firestore\\Data.Firestore.csproj"
+            "/Users/connorsherrill/Projects/Web-Hippo-Enterprise/backend/Data.Firestore/Data.Firestore.csproj": {
+              "projectPath": "/Users/connorsherrill/Projects/Web-Hippo-Enterprise/backend/Data.Firestore/Data.Firestore.csproj"
             }
           }
         }
@@ -1256,7 +1248,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.304/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
