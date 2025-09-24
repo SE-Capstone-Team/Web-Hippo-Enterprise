@@ -13,7 +13,7 @@
     <a href="index.html#home" class="nav-logo">Hippo <span>Exchange</span></a>
     <button id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false" aria-controls="sidebar"><i class="fas fa-bars"></i></button>
     <ul class="nav-menu">
-      <li><a class="nav-link" href="index.html#home">Home</a></li>
+      <li><a class="nav-link" href="index.html">Home</a></li>
       <li><a class="nav-link" href="items.html">Items</a></li>
       <li><a class="nav-link" href="profile.html">Profile</a></li>
       <li><a class="nav-link" href="about.html">About</a></li>
@@ -42,14 +42,50 @@
         <p><strong>Name:</strong> <span id="profile-name">abc</span></p>
         <p><strong>Email:</strong> <span id="profile-email">abc@example.com</span></p>
         <p><strong>Contact:</strong> <span id="profile-contact">123-456-7890</span></p>
+        <p><strong>Address:</strong> <span id="profile-address">1234 st.</span></p>
       </div>
+      <button id="edit-profile" class="edit-btn">Edit Profile</button>
     </div>
   </section>
 </main>
-
 <script>
-  const sidebar=document.getElementById('sidebar'); const toggle=document.getElementById('sidebar-toggle');
-  toggle?.addEventListener('click',()=>{const open=sidebar.classList.toggle('open');toggle.setAttribute('aria-expanded',String(open));});
+  const sidebar=document.getElementById('sidebar'); 
+  const toggle=document.getElementById('sidebar-toggle');
+  toggle?.addEventListener('click',()=> {
+    const open=sidebar.classList.toggle('open');
+    toggle.setAttribute('aria-expanded',String(open));
+  });
+  //EDITING FUNCTIONALITY
+  const editBtn = document.getElementById('edit-profile');
+  const nameSpan = document.getElementById('profile-name');
+  const emailSpan = document.getElementById('profile-email');
+  const contactSpan = document.getElementById('profile-contact');
+  const addressSpan = document.getElementById('profile-address');
+  let isEditing = false;
+  editBtn.addEventListener('click', () => {
+    if (!isEditing) {
+      [nameSpan, emailSpan, contactSpan, addressSpan].forEach(span => {
+        span.contentEditable = true;
+        span.classList.add('editing'); 
+      });
+      nameSpan.focus(); 
+      editBtn.textContent = 'Save Changes';
+      isEditing = true;
+    } else {
+      [nameSpan, emailSpan, contactSpan, addressSpan].forEach(span => {
+        span.contentEditable = false;
+        span.classList.remove('editing'); 
+      });
+      editBtn.textContent = 'Edit Profile';
+      isEditing = false;
+      console.log('Profile updated:', {
+        name: nameSpan.textContent.trim(),
+        email: emailSpan.textContent.trim(),
+        contact: contactSpan.textContent.trim(),
+        address: addressSpan.textContent.trim()
+      });
+    }
+  });
 </script>
 </body>
 </html>
