@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hippo Exchange — Contact</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<header>
+  <nav class="navbar container">
+    <a href="index.html#home" class="nav-logo">Hippo <span>Exchange</span></a>
+    <button id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false" aria-controls="sidebar"><i class="fas fa-bars"></i></button>
+    <ul class="nav-menu">
+      <li><a class="nav-link" href="index.html#home">Home</a></li>
+      <li><a class="nav-link" href="index.html#items">Items</a></li>
+      <li><a class="nav-link" href="profile.html">Profile</a></li>
+      <li><a class="nav-link" href="about.html">About</a></li>
+      <li><a class="nav-link" href="contact.html">Contact</a></li>
+    </ul>
+  </nav>
+</header>
+
+<aside id="sidebar" aria-label="Sidebar">
+  <nav class="sidebar-nav">
+    <ul>
+      <li><a class="sidebar-link" href="profile.html"><i class="fas fa-user"></i> Profile</a></li>
+      <li><a class="sidebar-link" href="index.html#items"><i class="fas fa-box"></i> Items</a></li>
+      <li><a class="sidebar-link" href="about.html"><i class="fas fa-info-circle"></i> About</a></li>
+      <li><a class="sidebar-link" href="contact.html"><i class="fas fa-envelope"></i> Contact</a></li>
+    </ul>
+  </nav>
+</aside>
+
+<main>
+  <section class="container">
+    <h2 class="section-title">Contact Us</h2>
+    <ul class="contact-info-list">
+      <li class="contact-info"><i class="fas fa-map-marker-alt"></i> 123 Hippo St</li>
+      <li class="contact-info"><i class="fas fa-phone"></i> (123) 456-7890</li>
+      <li class="contact-info"><i class="fas fa-envelope"></i> support@hippoexchange.com</li>
+    </ul>
+    <form class="contact-form" onsubmit="event.preventDefault(); alert('Message sent!')">
+      <input type="text" class="form-input" placeholder="Your Name" required />
+      <input type="email" class="form-input" placeholder="Your Email" required />
+      <textarea class="form-textarea" placeholder="Your Message" required></textarea>
+      <button type="submit" class="submit-button">Send Message</button>
+    </form>
+  </section>
+</main>
+
+<script>
+  const sidebar=document.getElementById('sidebar'); const toggle=document.getElementById('sidebar-toggle');
+  toggle?.addEventListener('click',()=>{const open=sidebar.classList.toggle('open');toggle.setAttribute('aria-expanded',String(open));});
+</script>
+</body>
+</html>
