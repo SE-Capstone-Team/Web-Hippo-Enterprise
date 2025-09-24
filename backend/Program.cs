@@ -1,4 +1,4 @@
-﻿using Data.Firestore;
+using Data.Firestore;
 using Google.Cloud.Firestore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,7 +10,15 @@ if (string.IsNullOrWhiteSpace(projectId))
     throw new InvalidOperationException("Firestore project ID is not configured. Set 'Firestore:ProjectId' in configuration or the 'GOOGLE_CLOUD_PROJECT' environment variable.");
 }
 
-builder.Services.AddSingleton(_ => FirestoreDb.Create(projectId));
+var databaseId = builder.Configuration["Firestore:DatabaseId"] ??
+                Environment.GetEnvironmentVariable("FIRESTORE_DATABASE_ID");
+
+if (string.IsNullOrWhiteSpace(databaseId))
+{
+    throw new InvalidOperationException("Firestore database ID is not configured. Set 'Firestore:DatabaseId' in configuration.");
+}
+
+builder.Services.AddSingleton(_ => new FirestoreDbBuilder { ProjectId = projectId, DatabaseId = databaseId }.Build());
 builder.Services.AddSingleton<FsProfiles>();
 builder.Services.AddSingleton<FsItems>();
 
