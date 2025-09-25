@@ -10,10 +10,10 @@
 <body>
 <header>
   <nav class="navbar container">
-    <a href="index.html#home" class="nav-logo">Hippo <span>Exchange</span></a>
+    <a href="home.html#home" class="nav-logo">Hippo <span>Exchange</span></a>
     <button id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false" aria-controls="sidebar"><i class="fas fa-bars"></i></button>
     <ul class="nav-menu">
-      <li><a class="nav-link" href="index.html">Home</a></li>
+      <li><a class="nav-link" href="home.html">Home</a></li>
       <li><a class="nav-link" href="items.html">Items</a></li>
       <li><a class="nav-link" href="profile.html">Profile</a></li>
       <li><a class="nav-link" href="about.html">About</a></li>
@@ -26,7 +26,7 @@
   <nav class="sidebar-nav">
     <ul>
       <li><a class="sidebar-link" href="profile.html"><i class="fas fa-user"></i> Profile</a></li>
-      <li><a class="sidebar-link" href="index.html#items"><i class="fas fa-box"></i> Items</a></li>
+      <li><a class="sidebar-link" href="items.html"><i class="fas fa-box"></i> Items</a></li>
       <li><a class="sidebar-link" href="about.html"><i class="fas fa-info-circle"></i> About</a></li>
       <li><a class="sidebar-link" href="contact.html"><i class="fas fa-envelope"></i> Contact</a></li>
     </ul>
@@ -47,8 +47,12 @@
 </main>
 
 <script>
-  const sidebar=document.getElementById('sidebar'); const toggle=document.getElementById('sidebar-toggle');
-  toggle?.addEventListener('click',()=>{const open=sidebar.classList.toggle('open');toggle.setAttribute('aria-expanded',String(open));});
+  const sidebar=document.getElementById('sidebar'); 
+  const toggle=document.getElementById('sidebar-toggle');
+  toggle?.addEventListener('click',()=>{
+    const open=sidebar.classList.toggle('open');
+    toggle.setAttribute('aria-expanded',String(open));
+  });
 </script>
 </body>
 </html>

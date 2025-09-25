@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hippo Exchange — Home</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+<header>
+  <nav class="navbar container" aria-label="Primary navigation">
+    <a href="home.html#home" class="nav-logo">Hippo <span>Exchange</span></a>
+    <button id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false" aria-controls="sidebar"><i class="fas fa-bars"></i></button>
+    <ul class="nav-menu">
+      <li><a class="nav-link" href="home.html">Home</a></li>
+      <li><a class="nav-link" href="items.html">Items</a></li>
+      <li><a class="nav-link" href="profile.html">Profile</a></li>
+      <li><a class="nav-link" href="about.html">About</a></li>
+      <li><a class="nav-link" href="contact.html">Contact</a></li>
+    </ul>
+  </nav>
+</header>
+
+<aside id="sidebar" aria-label="Sidebar">
+  <nav class="sidebar-nav">
+    <ul>
+      <li><a class="sidebar-link" href="profile.html"><i class="fas fa-user"></i> Profile</a></li>
+      <li><a class="sidebar-link" href="items.html"><i class="fas fa-box"></i> Items</a></li>
+      <li><a class="sidebar-link" href="about.html"><i class="fas fa-info-circle"></i> About</a></li>
+      <li><a class="sidebar-link" href="contact.html"><i class="fas fa-envelope"></i> Contact</a></li>
+    </ul>
+  </nav>
+</aside>
+
+<main>
+  <section id="home" class="hero">
+    <div class="hero-inner">
+      <h1>Reliable Borrow & Loan</h1>
+      <p>Where Every Item Finds a New Home</p>
+      <a class="btn" href="#items">Borrow Item</a>
+      <a class="btn" href="items.html">Add Item</a>
+    </div>
+  </section>
+
+  <section id="items" class="container" aria-label="Available items">
+    <h2 class="section-title">Available Items to Borrow</h2>
+    <ul class="items-list">
+      <li class="item-card">
+        <img class="item-image" src="images/download.jpg" alt="Lawn Mower">
+        <h3 class="item-name">Lawn Mower</h3>
+        <p class="item-price">$15/day</p>
+        <button class="item-button" onclick="alert('Request sent for Lawn Mower')">Request</button>
+      </li>
+      <li class="item-card">
+        <img class="item-image" src="images/_MConverter.eu_best-cordless-drills-for-your-projects-section-1.png" alt="Power Drill">
+        <h3 class="item-name">Power Drill</h3>
+        <p class="item-price">$10/day</p>
+        <button class="item-button" onclick="alert('Request sent for Power Drill')">Request</button>
+      </li>
+      <li class="item-card">
+        <img class="item-image" src="images/camping-tents-iuytry-44-fa_600.png" alt="Camping Tent">
+        <h3 class="item-name">Camping Tent</h3>
+        <p class="item-price">$20/day</p>
+        <button class="item-button" onclick="alert('Request sent for Camping Tent')">Request</button>
+      </li>
+      <li class="item-card">
+        <img class="item-image" src="images/living-room-projector-2048px-1933-3x2-1.webp" alt="Projector">
+        <h3 class="item-name">Projector</h3>
+        <p class="item-price">$25/day</p>
+        <button class="item-button" onclick="alert('Request sent for Projector')">Request</button>
+      </li>
+    </ul>
+  </section>
+</main>
+
+<script>
+  const sidebar=document.getElementById('sidebar'); 
+  const toggle=document.getElementById('sidebar-toggle');
+  toggle?.addEventListener('click',()=>{
+    const open=sidebar.classList.toggle('open');
+    toggle.setAttribute('aria-expanded',String(open));
+  });
+</script>
+</body>
+</html>

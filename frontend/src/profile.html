@@ -10,10 +10,10 @@
 <body>
 <header>
   <nav class="navbar container">
-    <a href="index.html#home" class="nav-logo">Hippo <span>Exchange</span></a>
+    <a href="home.html#home" class="nav-logo">Hippo <span>Exchange</span></a>
     <button id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false" aria-controls="sidebar"><i class="fas fa-bars"></i></button>
     <ul class="nav-menu">
-      <li><a class="nav-link" href="index.html">Home</a></li>
+      <li><a class="nav-link" href="home.html">Home</a></li>
       <li><a class="nav-link" href="items.html">Items</a></li>
       <li><a class="nav-link" href="profile.html">Profile</a></li>
       <li><a class="nav-link" href="about.html">About</a></li>
@@ -37,7 +37,7 @@
   <section class="container" aria-label="User profile">
     <h2 class="section-title">My Profile</h2>
     <div class="profile-card">
-      <img id="profile-image" class="profile-image" src="https://via.placeholder.com/200" alt="abc Profile Picture">
+      <img id="profile-image" class="profile-image" src="images/placeholder.jpg" alt="Profile Picture">
       <div class="profile-info">
         <p><strong>Name:</strong> <span id="profile-name">abc</span></p>
         <p><strong>Email:</strong> <span id="profile-email">abc@example.com</span></p>
@@ -48,20 +48,23 @@
     </div>
   </section>
 </main>
+
 <script>
-  const sidebar=document.getElementById('sidebar'); 
-  const toggle=document.getElementById('sidebar-toggle');
+  const sidebar = document.getElementById('sidebar'); 
+  const toggle = document.getElementById('sidebar-toggle');
   toggle?.addEventListener('click',()=> {
-    const open=sidebar.classList.toggle('open');
+    const open = sidebar.classList.toggle('open');
     toggle.setAttribute('aria-expanded',String(open));
   });
-  //EDITING FUNCTIONALITY
+
+  // EDITING FUNCTIONALITY
   const editBtn = document.getElementById('edit-profile');
   const nameSpan = document.getElementById('profile-name');
   const emailSpan = document.getElementById('profile-email');
   const contactSpan = document.getElementById('profile-contact');
   const addressSpan = document.getElementById('profile-address');
   let isEditing = false;
+
   editBtn.addEventListener('click', () => {
     if (!isEditing) {
       [nameSpan, emailSpan, contactSpan, addressSpan].forEach(span => {
@@ -78,6 +81,7 @@
       });
       editBtn.textContent = 'Edit Profile';
       isEditing = false;
+
       console.log('Profile updated:', {
         name: nameSpan.textContent.trim(),
         email: emailSpan.textContent.trim(),
