@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Data.Firestore")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8f26a0e006e45d00711843c0834f6ffd0725a04f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+176216c528b275d4660a8d438e035dc99290063f")]
 [assembly: System.Reflection.AssemblyProductAttribute("Data.Firestore")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Data.Firestore")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
