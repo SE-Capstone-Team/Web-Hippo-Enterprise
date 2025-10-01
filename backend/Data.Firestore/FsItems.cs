@@ -1,6 +1,8 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 using Google.Cloud.Firestore;
 
 namespace Data.Firestore;
@@ -37,9 +39,12 @@ public sealed class FsItems
         {
             ItemId = itemId,
             Name = item.Name,
-            Description = item.Description,
-            Quantity = item.Quantity,
-            OwnerUserId = item.OwnerUserId,
+            PricePerDay = item.PricePerDay,
+            Picture = item.Picture,
+            Location = item.Location,
+            Status = item.Status,
+            Condition = item.Condition,
+            OwnerId = item.OwnerId,
         };
 
         await _collection.Document(itemId)
@@ -105,6 +110,22 @@ public sealed class FsItems
 
         return FirestoreDb.Create(projectId);
     }
+
+    public async Task<IReadOnlyList<InventoryItem>> ListByOwnerAsync(string ownerId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(ownerId))
+        {
+            return Array.Empty<InventoryItem>();
+        }
+
+        var query = _collection.WhereEqualTo("ownerId", ownerId);
+        var snapshot = await query.GetSnapshotAsync(cancellationToken).ConfigureAwait(false);
+
+        return snapshot.Documents
+            .Select(doc => doc.ConvertTo<InventoryItem>())
+            .ToList();
+    }
+
 }
 
 [FirestoreData]
@@ -116,12 +137,21 @@ public sealed class InventoryItem
     [FirestoreProperty("name")]
     public string Name { get; set; } = string.Empty;
 
-    [FirestoreProperty("description")]
-    public string Description { get; set; } = string.Empty;
+    [FirestoreProperty("pricePerDay")]
+    public double PricePerDay { get; set; }
 
-    [FirestoreProperty("quantity")]
-    public int Quantity { get; set; }
+    [FirestoreProperty("picture")]
+    public string Picture { get; set; } = string.Empty;
 
-    [FirestoreProperty("ownerUserId")]
-    public string OwnerUserId { get; set; } = string.Empty;
+    [FirestoreProperty("location")]
+    public string Location { get; set; } = string.Empty;
+
+    [FirestoreProperty("status")]
+    public string Status { get; set; } = string.Empty;
+
+    [FirestoreProperty("condition")]
+    public string Condition { get; set; } = string.Empty;
+
+    [FirestoreProperty("ownerId")]
+    public string OwnerId { get; set; } = string.Empty;
 }

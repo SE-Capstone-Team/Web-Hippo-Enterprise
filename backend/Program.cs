@@ -1,4 +1,4 @@
-using Data.Firestore;
+﻿using Data.Firestore;
 using Google.Cloud.Firestore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,11 +10,32 @@ if (string.IsNullOrWhiteSpace(projectId))
     throw new InvalidOperationException("Firestore project ID is not configured. Set 'Firestore:ProjectId' in configuration or the 'GOOGLE_CLOUD_PROJECT' environment variable.");
 }
 
-builder.Services.AddSingleton(_ => FirestoreDb.Create(projectId));
+var databaseId = builder.Configuration["Firestore:DatabaseId"] ??
+                 Environment.GetEnvironmentVariable("FIRESTORE_DATABASE_ID") ??
+                 "inventory-db";
 builder.Services.AddSingleton<FsProfiles>();
 builder.Services.AddSingleton<FsItems>();
 
+builder.Services.AddSingleton(_ =>
+{
+    var fb = new FirestoreDbBuilder
+    {
+        ProjectId = projectId,
+        DatabaseId = databaseId
+    };
+    return fb.Build();
+});
+builder.Services.AddCors(policy =>
+{
+    policy.AddDefaultPolicy(builder =>
+    {
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
+});
 var app = builder.Build();
+app.UseCors();
 
 app.Urls.Add("http://localhost:8000");
 
@@ -37,6 +58,18 @@ app.MapGet("/api/users/{userId}", async (string userId, FsProfiles profiles, Can
 {
     var profile = await profiles.ReadAsync(userId, cancellationToken);
     return profile is null ? Results.NotFound() : Results.Ok(profile);
+});
+app.MapGet("/api/users/{userId}/items", async (string userId, FirestoreDb db, CancellationToken cancellationToken) =>
+{
+    if (string.IsNullOrWhiteSpace(userId))
+    {
+        return Results.BadRequest("UserId cannot be null or empty.");
+    }
+    var collection = db.Collection("items");
+    var query = collection.WhereEqualTo("ownerId", userId);
+    var snapshot = await query.GetSnapshotAsync(cancellationToken);
+    var ownedItems = snapshot.Documents.Select(doc => doc.ConvertTo<InventoryItem>()).ToList();
+    return Results.Ok(ownedItems);
 });
 
 app.MapPut("/api/users/{userId}", async (string userId, UserProfile profile, FsProfiles profiles, CancellationToken cancellationToken) =>

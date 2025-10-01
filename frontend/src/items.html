@@ -88,40 +88,110 @@
   </section>
 </main>
 
-<script>
-  const sidebar=document.getElementById('sidebar'); 
-  const toggle=document.getElementById('sidebar-toggle');
-  toggle?.addEventListener('click',()=>{
-    const open=sidebar.classList.toggle('open');
-    toggle.setAttribute('aria-expanded',String(open));
+<script type="module">
+  const backendBaseUrl = 'http://localhost:8000';
+
+  // Sidebar toggle
+  const sidebar = document.getElementById('sidebar');
+  const toggle = document.getElementById('sidebar-toggle');
+  toggle?.addEventListener('click', () => {
+    const open = sidebar.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
   });
 
-  const addItemForm=document.getElementById('add-item-form');
-  const myItems=document.getElementById('my-items');
-  addItemForm.addEventListener('submit',(e)=>{
-    e.preventDefault();
-    const name=document.getElementById('item-name').value.trim();
-    const price=parseFloat(document.getElementById('item-price').value);
-    const picture=document.getElementById('item-picture').value.trim();
-    const locationTxt=document.getElementById('item-location').value.trim();
-    const status=document.getElementById('item-status').value;
+  // Auth check
+  const currentUserId = localStorage.getItem('hippo-user-id');
+  if (!currentUserId) {
+    alert('No user logged in. Please log in first.');
+    window.location.href = 'home.html';
+  }
 
-    const card=document.createElement('article');
-    card.className='mine-card';
-    card.innerHTML=`
+  // API helpers
+  async function createItem(item) {
+    const response = await fetch(`${backendBaseUrl}/api/items`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(item)
+    });
+    if (!response.ok) {
+      throw new Error('Failed to create item');
+    }
+    return await response.json();
+  }
+
+  async function loadItems() {
+    const response = await fetch(`${backendBaseUrl}/api/users/${currentUserId}/items`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch items');
+    }
+    return await response.json();
+  }
+
+  // DOM rendering
+  function renderItem(item) {
+    const myItems = document.getElementById('my-items');
+    const card = document.createElement('article');
+    card.className = 'mine-card';
+    card.innerHTML = `
       <div class="thumb-wrap">
-        <img class="thumb" src="${picture || 'images/placeholder.jpg'}" alt="${name}">
-        <span class="badge ${status.toLowerCase()}">${status}</span>
+        <img class="thumb" src="${item.picture || 'images/placeholder.jpg'}" alt="${item.name}">
+        <span class="badge ${String(item.status || '').toLowerCase()}">${item.status || ''}</span>
       </div>
       <div class="mine-body">
-        <div class="mine-title">${name}</div>
-        <div class="mine-meta">$${price.toFixed(2)}/day • ${locationTxt}</div>
+        <div class="mine-title">${item.name}</div>
+        <div class="mine-meta">$${(parseFloat(item.pricePerDay) || 0).toFixed(2)}/day • ${item.location}</div>
       </div>`;
     myItems.prepend(card);
-    addItemForm.reset();
-    alert('Item "' + name + '" added!');
+  }
 
+  // Form submit - create and render item
+  document.getElementById('add-item-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const itemId = ''; // Backend will assign
+    const name = document.getElementById('item-name').value.trim();
+    const price = parseFloat(document.getElementById('item-price').value);
+    const picture = document.getElementById('item-picture').value.trim();
+    const locationTxt = document.getElementById('item-location').value.trim();
+    const status = document.getElementById('item-status').value;
+    const condition = document.getElementById('item-condition').value;
+    const ownerId = currentUserId;
+
+    if (!name || isNaN(price) || !picture || !locationTxt || !status || !condition) {
+      alert('Please fill in all fields.');
+      return;
+    }
+
+    const newItem = {
+      itemId: '', // Backend will assign
+      name: name,
+      pricePerDay: price,
+      picture: picture,
+      location: locationTxt,
+      status: status,
+      condition: condition,
+      ownerId: currentUserId
+    };
+
+    try {
+      const created = await createItem(newItem);
+      renderItem(created);
+      document.getElementById('add-item-form').reset();
+      alert('Item "' + name + '" added!');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to add item: ' + err.message);
+    }
   });
+
+  // Initialize list
+  (async function init() {
+    try {
+      const items = await loadItems();
+      items.forEach(renderItem);
+    } catch (err) {
+      console.error(err);
+    }
+  })();
 </script>
 </body>
 </html>
