@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Hippo Exchange — About</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
-<link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hippo Exchange — About</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 <header>
-  <nav class="navbar container">
-    <a href="home.html#home" class="nav-logo">Hippo <span>Exchange</span></a>
+  <nav class="navbar container" aria-label="Primary navigation">
+    <a href="home.html" class="nav-logo">Hippo <span>Exchange</span></a>
     <button id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false" aria-controls="sidebar"><i class="fas fa-bars"></i></button>
     <ul class="nav-menu">
       <li><a class="nav-link" href="home.html">Home</a></li>
@@ -18,6 +18,7 @@
       <li><a class="nav-link" href="profile.html">Profile</a></li>
       <li><a class="nav-link" href="about.html">About</a></li>
       <li><a class="nav-link" href="contact.html">Contact</a></li>
+      <li><button class="nav-link logout-button" onclick="logout()">Log out</button></li>
     </ul>
   </nav>
 </header>
@@ -29,30 +30,36 @@
       <li><a class="sidebar-link" href="items.html"><i class="fas fa-box"></i> Items</a></li>
       <li><a class="sidebar-link" href="about.html"><i class="fas fa-info-circle"></i> About</a></li>
       <li><a class="sidebar-link" href="contact.html"><i class="fas fa-envelope"></i> Contact</a></li>
+      <button class="sidebar-link logout-button" onclick="logout()" type="button" aria-label="Log out"><i class="fas fa-sign-out-alt"></i> Log out</button></li>
     </ul>
   </nav>
 </aside>
 
-<main>
-  <section class="container">
-    <h2 class="section-title">About Hippo Exchange</h2>
-    <div class="about">
-      <img src="images/BernardDaHippo.png" alt="About Hippo Exchange">
-      <div class="text">
-        <p>Hippo Exchange is your reliable platform to borrow and loan items within your community. We aim to connect people, promote sharing, and reduce waste by giving everyday items a new home.</p>
-        <p>Whether you need a power drill for a weekend project or want to lend out your camping gear, Hippo Exchange makes it easy and secure.</p>
-      </div>
+<main class="container">
+  <h2 class="section-title">About Hippo Exchange</h2>
+  <div class="about">
+    <img src="images/BernardDaHippo.png" alt="Hippo Logo">
+    <div class="text">
+      <p>Hippo Exchange is a peer-to-peer platform where users can easily borrow and loan items. 
+      Our mission is to make everyday resources more accessible, reduce waste, and foster community sharing.</p>
+      <p>Whether you’re lending tools, borrowing equipment, or finding temporary items, Hippo Exchange 
+      connects people with the things they need, when they need them.</p>
     </div>
-  </section>
+  </div>
 </main>
 
 <script>
-  const sidebar=document.getElementById('sidebar'); 
-  const toggle=document.getElementById('sidebar-toggle');
-  toggle?.addEventListener('click',()=>{
-    const open=sidebar.classList.toggle('open');
-    toggle.setAttribute('aria-expanded',String(open));
+  const sidebar = document.getElementById('sidebar'); 
+  const toggle = document.getElementById('sidebar-toggle');
+  toggle?.addEventListener('click', () => {
+    const open = sidebar.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
   });
+
+  function logout() {
+    alert('You have been logged out.');
+    window.location.href = 'index.html'; 
+  }
 </script>
 </body>
 </html>

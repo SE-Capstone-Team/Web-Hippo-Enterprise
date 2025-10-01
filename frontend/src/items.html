@@ -9,17 +9,16 @@
 </head>
 <body>
 <header>
-  <nav class="navbar container">
-    <a href="home.html#home" class="nav-logo">Hippo <span>Exchange</span></a>
-    <button id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false" aria-controls="sidebar">
-      <i class="fas fa-bars"></i>
-    </button>
+  <nav class="navbar container" aria-label="Primary navigation">
+    <a href="home.html" class="nav-logo">Hippo <span>Exchange</span></a>
+    <button id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false" aria-controls="sidebar"><i class="fas fa-bars"></i></button>
     <ul class="nav-menu">
       <li><a class="nav-link" href="home.html">Home</a></li>
       <li><a class="nav-link" href="items.html">Items</a></li>
       <li><a class="nav-link" href="profile.html">Profile</a></li>
       <li><a class="nav-link" href="about.html">About</a></li>
       <li><a class="nav-link" href="contact.html">Contact</a></li>
+      <li><button class="nav-link logout-button" onclick="logout()">Log out</button></li>
     </ul>
   </nav>
 </header>
@@ -31,97 +30,44 @@
       <li><a class="sidebar-link" href="items.html"><i class="fas fa-box"></i> Items</a></li>
       <li><a class="sidebar-link" href="about.html"><i class="fas fa-info-circle"></i> About</a></li>
       <li><a class="sidebar-link" href="contact.html"><i class="fas fa-envelope"></i> Contact</a></li>
+      <button class="sidebar-link logout-button" onclick="logout()" type="button" aria-label="Log out"><i class="fas fa-sign-out-alt"></i> Log out</button></li>
     </ul>
   </nav>
 </aside>
 
-<main>
-  <section class="container">
-    <!-- Add New Item -->
-    <h3 class="center-subtitle">Add New Item</h3>
-    <form id="add-item-form" class="add-item-form">
-      <input type="text" id="item-name" placeholder="Item Name" required />
-      <input type="number" id="item-price" placeholder="Price per day ($)" min="0" required />
-      <input type="url" id="item-picture" placeholder="Picture URL" required />
-      <input type="text" id="item-location" placeholder="Location" required />
-      <select id="item-status" required>
-        <option value="" disabled selected>Status of Borrow</option>
-        <option value="Listed">Listed</option>
-        <option value="Loaned">Loaned</option>
-      </select>
-      <select id="item-condition" required>
-        <option value="" disabled selected>Select Condition</option>
-        <option value="New/Unused">New/Unused</option>
-        <option value="Like New">Like New</option>
-        <option value="Excellent">Excellent</option>
-        <option value="Good">Good</option>
-        <option value="Fair">Fair</option>
-      </select>
+<main class="container">
+  <h2 class="section-title">My Items</h2>
 
-      <button type="submit" class="submit-button">Add Item</button>
-    </form>
+  <!-- Message container -->
+  <div id="items-messages"></div>
 
-    <!-- Listed Items -->
-    <h3 class="center-subtitle items">Listed Items</h3>
-    <div id="my-items" class="items-grid">
-      <article class="mine-card">
-        <div class="thumb-wrap">
-          <img class="thumb" src="images/327681193_RM_RYOBI.png" alt="Pressure Washer">
-          <span class="badge listed">Listed</span>
-        </div>
-        <div class="mine-body">
-          <div class="mine-title">Pressure Washer</div>
-          <div class="mine-meta">$18/day • Cookeville</div>
-        </div>
-      </article>
-      <article class="mine-card">
-        <div class="thumb-wrap">
-          <img class="thumb" src="images/Gas_vs_electric_stove_Image1M.webp" alt="Camping Stove">
-          <span class="badge loaned">Loaned</span>
-        </div>
-        <div class="mine-body">
-          <div class="mine-title">Camping Stove</div>
-          <div class="mine-meta">$7/day • Cookeville</div>
-        </div>
-      </article>
-    </div>
-  </section>
+  <!-- Add Item Form -->
+  <form id="add-item-form" class="add-item-form">
+    <input type="text" name="name" placeholder="Item Name" required />
+    <input type="number" name="price" placeholder="Price per day" required />
+    <input type="text" name="description" placeholder="Description" required />
+    <input type="text" name="condition" placeholder="Condition (e.g., New, Used)" required />
+    <button type="submit" class="submit-button">Add Item</button>
+  </form>
+
+  <!-- Items Grid -->
+  <div id="items-list" class="items-grid"></div>
 </main>
 
 <script>
-  const sidebar=document.getElementById('sidebar'); 
-  const toggle=document.getElementById('sidebar-toggle');
-  toggle?.addEventListener('click',()=>{
-    const open=sidebar.classList.toggle('open');
-    toggle.setAttribute('aria-expanded',String(open));
+  const sidebar = document.getElementById('sidebar'); 
+  const toggle = document.getElementById('sidebar-toggle');
+  toggle?.addEventListener('click', () => {
+    const open = sidebar.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
   });
 
-  const addItemForm=document.getElementById('add-item-form');
-  const myItems=document.getElementById('my-items');
-  addItemForm.addEventListener('submit',(e)=>{
-    e.preventDefault();
-    const name=document.getElementById('item-name').value.trim();
-    const price=parseFloat(document.getElementById('item-price').value);
-    const picture=document.getElementById('item-picture').value.trim();
-    const locationTxt=document.getElementById('item-location').value.trim();
-    const status=document.getElementById('item-status').value;
-
-    const card=document.createElement('article');
-    card.className='mine-card';
-    card.innerHTML=`
-      <div class="thumb-wrap">
-        <img class="thumb" src="${picture || 'images/placeholder.jpg'}" alt="${name}">
-        <span class="badge ${status.toLowerCase()}">${status}</span>
-      </div>
-      <div class="mine-body">
-        <div class="mine-title">${name}</div>
-        <div class="mine-meta">$${price.toFixed(2)}/day • ${locationTxt}</div>
-      </div>`;
-    myItems.prepend(card);
-    addItemForm.reset();
-    alert('Item "' + name + '" added!');
-
-  });
+  function logout() {
+    alert('You have been logged out.');
+    window.location.href = 'index.html'; 
+  }
 </script>
+<script src="js/utils.js"></script>
+<script src="js/items.js"></script>
 </body>
 </html>
