@@ -19,6 +19,7 @@
       <li><a class="nav-link" href="profile.html">Profile</a></li>
       <li><a class="nav-link" href="about.html">About</a></li>
       <li><a class="nav-link" href="contact.html">Contact</a></li>
+      <li><button class="nav-link logout-button" onclick="logout()">Log out</button></li>
     </ul>
   </nav>
 </header>
@@ -30,6 +31,7 @@
       <li><a class="sidebar-link" href="items.html"><i class="fas fa-box"></i> Items</a></li>
       <li><a class="sidebar-link" href="about.html"><i class="fas fa-info-circle"></i> About</a></li>
       <li><a class="sidebar-link" href="contact.html"><i class="fas fa-envelope"></i> Contact</a></li>
+      <button class="sidebar-link logout-button" onclick="logout()" type="button" aria-label="Log out"><i class="fas fa-sign-out-alt"></i> Log out</button></li>
     </ul>
   </nav>
 </aside>
@@ -46,42 +48,29 @@
 
   <section id="items" class="container" aria-label="Available items">
     <h2 class="section-title">Available Items to Borrow</h2>
-    <ul class="items-list">
-      <li class="item-card">
-        <img class="item-image" src="images/download.jpg" alt="Lawn Mower">
-        <h3 class="item-name">Lawn Mower</h3>
-        <p class="item-price">$15/day</p>
-        <button class="item-button" onclick="alert('Request sent for Lawn Mower')">Request</button>
-      </li>
-      <li class="item-card">
-        <img class="item-image" src="images/_MConverter.eu_best-cordless-drills-for-your-projects-section-1.png" alt="Power Drill">
-        <h3 class="item-name">Power Drill</h3>
-        <p class="item-price">$10/day</p>
-        <button class="item-button" onclick="alert('Request sent for Power Drill')">Request</button>
-      </li>
-      <li class="item-card">
-        <img class="item-image" src="images/camping-tents-iuytry-44-fa_600.png" alt="Camping Tent">
-        <h3 class="item-name">Camping Tent</h3>
-        <p class="item-price">$20/day</p>
-        <button class="item-button" onclick="alert('Request sent for Camping Tent')">Request</button>
-      </li>
-      <li class="item-card">
-        <img class="item-image" src="images/living-room-projector-2048px-1933-3x2-1.webp" alt="Projector">
-        <h3 class="item-name">Projector</h3>
-        <p class="item-price">$25/day</p>
-        <button class="item-button" onclick="alert('Request sent for Projector')">Request</button>
-      </li>
-    </ul>
+
+    <!-- Message container -->
+    <div id="items-messages"></div>
+
+    <!-- Items will be rendered here dynamically -->
+    <ul id="items-list" class="items-list"></ul>
   </section>
 </main>
 
 <script>
-  const sidebar=document.getElementById('sidebar'); 
-  const toggle=document.getElementById('sidebar-toggle');
-  toggle?.addEventListener('click',()=>{
-    const open=sidebar.classList.toggle('open');
-    toggle.setAttribute('aria-expanded',String(open));
+  const sidebar = document.getElementById('sidebar'); 
+  const toggle = document.getElementById('sidebar-toggle');
+  toggle?.addEventListener('click', () => {
+    const open = sidebar.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
   });
+
+  function logout() {
+    alert('You have been logged out.');
+    window.location.href = 'index.html'; 
+  }
 </script>
+<script src="js/utils.js"></script>
+<script src="js/items.js"></script>
 </body>
 </html>

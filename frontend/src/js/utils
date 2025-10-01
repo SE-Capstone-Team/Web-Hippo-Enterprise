@@ -1,0 +1,17 @@
+// utils.js
+
+export function showMessage(containerId, text, type = "success") {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const div = document.createElement("div");
+  div.className = `alert ${type}`;
+  div.innerText = text;
+
+  container.appendChild(div);
+
+  // Auto-remove after 4 seconds
+  setTimeout(() => {
+    div.remove();
+  }, 4000);
+}

@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Hippo Exchange — Profile</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
-<link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hippo Exchange — Profile</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 <header>
-  <nav class="navbar container">
-    <a href="home.html#home" class="nav-logo">Hippo <span>Exchange</span></a>
+  <nav class="navbar container" aria-label="Primary navigation">
+    <a href="home.html" class="nav-logo">Hippo <span>Exchange</span></a>
     <button id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false" aria-controls="sidebar"><i class="fas fa-bars"></i></button>
     <ul class="nav-menu">
       <li><a class="nav-link" href="home.html">Home</a></li>
@@ -18,6 +18,7 @@
       <li><a class="nav-link" href="profile.html">Profile</a></li>
       <li><a class="nav-link" href="about.html">About</a></li>
       <li><a class="nav-link" href="contact.html">Contact</a></li>
+      <li><button class="nav-link logout-button" onclick="logout()">Log out</button></li>
     </ul>
   </nav>
 </header>
@@ -29,67 +30,55 @@
       <li><a class="sidebar-link" href="items.html"><i class="fas fa-box"></i> Items</a></li>
       <li><a class="sidebar-link" href="about.html"><i class="fas fa-info-circle"></i> About</a></li>
       <li><a class="sidebar-link" href="contact.html"><i class="fas fa-envelope"></i> Contact</a></li>
+      <button class="sidebar-link logout-button" onclick="logout()" type="button" aria-label="Log out"><i class="fas fa-sign-out-alt"></i> Log out</button></li>
     </ul>
   </nav>
 </aside>
 
-<main>
-  <section class="container" aria-label="User profile">
-    <h2 class="section-title">My Profile</h2>
-    <div class="profile-card">
-      <img id="profile-image" class="profile-image" src="images/placeholder.jpg" alt="Profile Picture">
-      <div class="profile-info">
-        <p><strong>Name:</strong> <span id="profile-name">abc</span></p>
-        <p><strong>Email:</strong> <span id="profile-email">abc@example.com</span></p>
-        <p><strong>Contact:</strong> <span id="profile-contact">123-456-7890</span></p>
-        <p><strong>Address:</strong> <span id="profile-address">1234 st.</span></p>
-      </div>
-      <button id="edit-profile" class="edit-btn">Edit Profile</button>
+<main class="container">
+  <h2 class="section-title">My Profile</h2>
+
+  <!-- Message container -->
+  <div id="profile-messages"></div>
+
+  <!-- Profile Card -->
+  <div class="profile-card">
+    <img class="profile-image" src="images/BernardDaHippo.png" alt="Profile Image" />
+
+    <div class="profile-info">
+      <p>
+        <label>Name:</label>
+        <input id="profile-name" type="text" />
+      </p>
+      <p>
+        <label>Email:</label>
+        <input id="profile-email" type="email" />
+      </p>
+      <p>
+        <label>Role:</label>
+        <input id="profile-role" type="text" />
+      </p>
+
+      <button id="save-profile" class="edit-btn">Save</button>
+      <button id="delete-profile" class="edit-btn" style="background:#ef4444;">Delete</button>
     </div>
-  </section>
+  </div>
 </main>
 
 <script>
   const sidebar = document.getElementById('sidebar'); 
   const toggle = document.getElementById('sidebar-toggle');
-  toggle?.addEventListener('click',()=> {
+  toggle?.addEventListener('click', () => {
     const open = sidebar.classList.toggle('open');
-    toggle.setAttribute('aria-expanded',String(open));
+    toggle.setAttribute('aria-expanded', String(open));
   });
 
-  // EDITING FUNCTIONALITY
-  const editBtn = document.getElementById('edit-profile');
-  const nameSpan = document.getElementById('profile-name');
-  const emailSpan = document.getElementById('profile-email');
-  const contactSpan = document.getElementById('profile-contact');
-  const addressSpan = document.getElementById('profile-address');
-  let isEditing = false;
-
-  editBtn.addEventListener('click', () => {
-    if (!isEditing) {
-      [nameSpan, emailSpan, contactSpan, addressSpan].forEach(span => {
-        span.contentEditable = true;
-        span.classList.add('editing'); 
-      });
-      nameSpan.focus(); 
-      editBtn.textContent = 'Save Changes';
-      isEditing = true;
-    } else {
-      [nameSpan, emailSpan, contactSpan, addressSpan].forEach(span => {
-        span.contentEditable = false;
-        span.classList.remove('editing'); 
-      });
-      editBtn.textContent = 'Edit Profile';
-      isEditing = false;
-
-      console.log('Profile updated:', {
-        name: nameSpan.textContent.trim(),
-        email: emailSpan.textContent.trim(),
-        contact: contactSpan.textContent.trim(),
-        address: addressSpan.textContent.trim()
-      });
-    }
-  });
+  function logout() {
+    alert('You have been logged out.');
+    window.location.href = 'index.html'; 
+  }
 </script>
+<script src="js/utils.js"></script>
+<script src="js/profile.js"></script>
 </body>
 </html>
