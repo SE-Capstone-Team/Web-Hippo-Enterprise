@@ -25,6 +25,8 @@ builder.Services.AddSingleton(_ =>
     };
     return fb.Build();
 });
+
+var MyCors = "_dev";
 builder.Services.AddCors(policy =>
 {
     policy.AddDefaultPolicy(builder =>
@@ -35,7 +37,7 @@ builder.Services.AddCors(policy =>
     });
 });
 var app = builder.Build();
-app.UseCors();
+app.UseCors(MyCors);
 
 app.Urls.Add("http://localhost:8000");
 
