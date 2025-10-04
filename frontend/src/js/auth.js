@@ -16,6 +16,9 @@ showRegisterBtn?.addEventListener("click", () => togglePanel("register"));
 loginForm?.addEventListener("submit", handleLogin);
 registerForm?.addEventListener("submit", handleRegister);
 
+// ==========================
+// Panel Switching
+// ==========================
 function togglePanel(kind) {
   const loginActive = kind === "login";
   loginPanel?.classList.toggle("active", loginActive);
@@ -25,45 +28,68 @@ function togglePanel(kind) {
   clearMessages();
 }
 
+// ==========================
+// Helper Functions
+// ==========================
 function clearMessages() {
   const container = document.getElementById(messagesId);
-  if (container) {
-    container.innerHTML = "";
-  }
+  if (container) container.innerHTML = "";
 }
 
+function validateEmail(email) {
+  return email.includes("@") && email.includes(".");
+}
+
+// ==========================
+// Handle Login
+// ==========================
 async function handleLogin(event) {
   event.preventDefault();
   clearMessages();
 
   const email = document.getElementById("login-email")?.value.trim();
-  if (!email) {
-    showMessage(messagesId, "Email is required to log in.", "error", { autoHide: false });
+  const password = document.getElementById("login-password")?.value.trim();
+
+  // --- Frontend Validation ---
+  if (!email || !password) {
+    showMessage(messagesId, "Please fill in both email and password.", "error", { autoHide: false });
+    return;
+  }
+
+  if (!validateEmail(email)) {
+    showMessage(messagesId, "Please enter a valid email address.", "error", { autoHide: false });
     return;
   }
 
   try {
-    const res = await fetch(`${API_BASE}/api/users?email=${encodeURIComponent(email)}`);
-    if (res.status === 404) {
-      showMessage(messagesId, "We couldn't find an account with that email.", "error", { autoHide: false });
-      return;
-    }
-
+    // For now, fetch all users (since backend doesnâ€™t yet support ?email=)
+    const res = await fetch(`${API_BASE}/api/users`);
     if (!res.ok) {
-      throw new Error(await res.text() || "Login failed.");
+      throw new Error("Unable to connect to the server.");
     }
 
-    const profile = await res.json();
-    localStorage.setItem("hippo-user-id", profile.userId);
-    showMessage(messagesId, "Login successful! Redirecting…", "success");
-    setTimeout(() => {
-      window.location.href = "items.html";
-    }, 600);
+    const users = await res.json();
+    const foundUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+
+    if (foundUser) {
+      // For now, any password works (until Authentik integration)
+      localStorage.setItem("hippo-user-id", foundUser.userId);
+      showMessage(messagesId, "Login successful! Redirecting...", "success");
+      setTimeout(() => {
+        window.location.href = "home.html";
+      }, 700);
+    } else {
+      showMessage(messagesId, "No user found with that email.", "error", { autoHide: false });
+    }
   } catch (err) {
+    console.error(err);
     showMessage(messagesId, err.message ?? "Unable to log in.", "error", { autoHide: false });
   }
 }
 
+// ==========================
+// Handle Registration
+// ==========================
 async function handleRegister(event) {
   event.preventDefault();
   clearMessages();
@@ -72,9 +98,16 @@ async function handleRegister(event) {
   const lastName = document.getElementById("reg-last-name")?.value.trim() ?? "";
   const email = document.getElementById("reg-email")?.value.trim() ?? "";
   const role = document.getElementById("reg-role")?.value.trim() || "owner";
+  const password = document.getElementById("reg-password")?.value.trim() ?? "";
 
-  if (!firstName || !email) {
-    showMessage(messagesId, "First name and email are required.", "error", { autoHide: false });
+  // --- Frontend Validation ---
+  if (!firstName || !email || !password) {
+    showMessage(messagesId, "First name, email, and password are required.", "error", { autoHide: false });
+    return;
+  }
+
+  if (!validateEmail(email)) {
+    showMessage(messagesId, "Please enter a valid email address.", "error", { autoHide: false });
     return;
   }
 
@@ -93,11 +126,12 @@ async function handleRegister(event) {
 
     const created = await res.json();
     localStorage.setItem("hippo-user-id", created.userId);
-    showMessage(messagesId, "Account created! Redirecting to your profile…", "success");
+    showMessage(messagesId, "Account created! Redirecting to your profile...", "success");
     setTimeout(() => {
       window.location.href = "profile.html";
     }, 700);
   } catch (err) {
+    console.error(err);
     showMessage(messagesId, err.message ?? "Unable to register.", "error", { autoHide: false });
   }
 }
