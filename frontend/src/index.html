@@ -3,119 +3,122 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hippo Exchange â€” Login & Registration</title>
+  <title>Hippo Exchange — Login & Registration</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body, html {
-  height: 100%;
-  background-color: #dfeffc; /* just solid blue */
-  display: flex; 
-  flex-direction: column;
-  justify-content: center; 
-  align-items: center;
-  padding-top: 10px; 
-  color: #243946;
-}
-
+      min-height: 100%;
+      background-color: #dfeffc;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      color: #243946;
+    }
+    .top-header { text-align: center; margin-bottom: 24px; }
+    .page-title { font-size: 36px; font-weight: 700; color: #1f4d79; }
     .container {
-      background: rgba(255,255,255,0.9);
-      width: 600px; max-width: 90vw;
+      background: rgba(255,255,255,0.92);
+      width: 620px; max-width: 92vw;
       border-radius: 20px; border: 3px solid #93b9e1;
-      padding: 20px 40px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      padding: 32px 44px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.12);
     }
-    .top-header { width: 100%; text-align: center; margin-bottom: 20px; }
-    .page-title { font-size: 32px; font-weight: 700; color: #93b9e1; margin: 0; }
-    .tab-content { padding: 30px 0 40px; }
-    .media-image {
-      width: 120px; height: 100px; margin: 0 auto 30px; display: block;
-      border-radius: 10px; object-fit: cover;
+    .messages { margin-bottom: 18px; }
+    .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; }
+    .alert.info { background: #e0f2fe; color: #0f4c81; }
+    .alert.success { background: #dcfce7; color: #166534; }
+    .alert.error { background: #fee2e2; color: #991b1b; }
+    .tab-toggle { display: flex; gap: 12px; justify-content: center; margin-bottom: 18px; }
+    .tab-toggle button {
+      border: none; background: transparent; color: #1f4d79;
+      font-weight: 600; font-size: 16px; cursor: pointer; padding: 8px 18px;
+      border-radius: 999px; transition: background 0.2s ease, color 0.2s ease;
     }
-    form { display: flex; flex-direction: column; }
-    label {
-      margin-bottom: 15px; font-weight: 600; font-size: 14px; color: #4d7ba8;
+    .tab-toggle button.active { background: #93b9e1; color: #0b2137; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .panel img { width: 120px; height: 100px; margin: 0 auto 24px; display: block; border-radius: 12px; object-fit: cover; }
+    form { display: grid; gap: 18px; }
+    label { font-weight: 600; font-size: 14px; color: #4d7ba8; }
+    input, select {
+      padding: 12px 14px; border: 2px solid #93b9e1; border-radius: 32px;
+      font-size: 15px; transition: border-color 0.2s ease; outline: none;
     }
-    input {
-      padding: 10px 15px; border: 2px solid #93b9e1; border-radius: 30px;
-      font-size: 14px; transition: border-color 0.3s ease; outline: none; width: 100%;
+    input:focus, select:focus { border-color: #1f4d79; }
+    .submit-btn {
+      margin-top: 12px; padding: 12px 0; background-color: #1f4d79;
+      color: #f5f9ff; border: none; border-radius: 999px;
+      font-weight: 700; font-size: 16px; cursor: pointer;
+      transition: background 0.2s ease;
     }
-    input:focus { border-color: #93b9e1; }
-    button.submit-btn {
-      margin-top: 20px; padding: 12px 0; background-color: #93b9e1;
-      border: none; border-radius: 30px; color: #243946; font-weight: 700;
-      font-size: 16px; cursor: pointer; transition: background-color 0.3s ease;
-    }
-    button.submit-btn:hover { background-color: #7594b4; color: #fff; }
-    .toggle-link {
-      margin-top: 15px; font-size: 13px; color: #93b9e1; text-align: center;
-      cursor: pointer; text-decoration: underline; user-select: none;
-    }
-    .toggle-link:hover { color: #7594b4; }
-    .tab-content > div { display: none; }
-    .tab-content > div.active { display: block; }
+    .submit-btn:hover { background-color: #16395b; }
+    .helper { font-size: 13px; color: #5e7fa6; text-align: center; }
   </style>
 </head>
 <body>
   <div class="top-header">
     <h1 class="page-title">Hippo Exchange</h1>
+    <p class="helper">Borrow. Lend. Connect.</p>
   </div>
 
   <div class="container">
-    <div class="tab-content">
-      <!-- Login -->
-      <div id="login-form" class="active">
-        <img src="images/BernardDaHippo.png" alt="Login Graphic" class="media-image" />
-        <form onsubmit="redirectToAuthentik(event)">
-          <label for="login-username">Username</label>
-          <input type="text" id="login-username" placeholder="Enter username" required />
+    <div id="auth-messages" class="messages"></div>
+
+    <div class="tab-toggle">
+      <button id="show-login" class="active" type="button">Login</button>
+      <button id="show-register" type="button">Register</button>
+    </div>
+
+    <section id="login-panel" class="panel active">
+      <img src="images/BernardDaHippo.png" alt="Hippo Login" />
+      <form id="login-form">
+        <div>
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" placeholder="you@example.com" required />
+        </div>
+        <div>
           <label for="login-password">Password</label>
           <input type="password" id="login-password" placeholder="Enter password" required />
-          <button type="submit" class="submit-btn">Login</button>
-        </form>
-        <div class="toggle-link" id="to-register">Don't have an account? Register</div>
-      </div>
+          <p class="helper">Passwords aren't checked yet; we'll wire Authentik soon.</p>
+        </div>
+        <button type="submit" class="submit-btn">Login</button>
+      </form>
+    </section>
 
-      <!-- Register -->
-      <div id="register-form">
-        <img src="images/BernardDaHippo.png" alt="Register Graphic" class="media-image" />
-        <form onsubmit="redirectToAuthentik(event)">
-          <label for="reg-username">Username</label>
-          <input type="text" id="reg-username" placeholder="Choose a username" required />
+    <section id="register-panel" class="panel">
+      <img src="images/BernardDaHippo.png" alt="Hippo Register" />
+      <form id="register-form">
+        <div>
+          <label for="reg-first-name">First name</label>
+          <input type="text" id="reg-first-name" placeholder="Bernard" required />
+        </div>
+        <div>
+          <label for="reg-last-name">Last name</label>
+          <input type="text" id="reg-last-name" placeholder="Da Hippo" />
+        </div>
+        <div>
           <label for="reg-email">Email</label>
-          <input type="email" id="reg-email" placeholder="Enter your email" required />
+          <input type="email" id="reg-email" placeholder="you@example.com" required />
+        </div>
+        <div>
+          <label for="reg-role">Role</label>
+          <select id="reg-role">
+            <option value="owner" selected>Owner</option>
+            <option value="borrower">Borrower</option>
+          </select>
+        </div>
+        <div>
           <label for="reg-password">Password</label>
           <input type="password" id="reg-password" placeholder="Create a password" required />
-          <label for="reg-password-confirm">Confirm Password</label>
-          <input type="password" id="reg-password-confirm" placeholder="Confirm password" required />
-          <button type="submit" class="submit-btn">Register</button>
-        </form>
-        <div class="toggle-link" id="to-login">Already have an account? Login</div>
-      </div>
-    </div>
+          <p class="helper">For now this is just stored locally until Authentik integration.</p>
+        </div>
+        <button type="submit" class="submit-btn">Create Account</button>
+      </form>
+    </section>
   </div>
 
-  <script>
-    const loginForm = document.getElementById('login-form');
-    const registerForm = document.getElementById('register-form');
-    const toRegisterLink = document.getElementById('to-register');
-    const toLoginLink = document.getElementById('to-login');
-
-    toRegisterLink.addEventListener('click', () => {
-      loginForm.classList.remove('active');
-      registerForm.classList.add('active');
-    });
-
-    toLoginLink.addEventListener('click', () => {
-      registerForm.classList.remove('active');
-      loginForm.classList.add('active');
-    });
-
-    // Redirect to Authentik login page
-    function redirectToAuthentik(e) {
-      e.preventDefault();
-      // TODO: replace this with actual Authentik login URL
-      window.location.href = "home.html"; 
-    }
-  </script>
+  <script type="module" src="js/auth.js"></script>
 </body>
 </html>

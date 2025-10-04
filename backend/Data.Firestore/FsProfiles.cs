@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Cloud.Firestore;
@@ -61,6 +62,20 @@ public sealed class FsProfiles
             .ConfigureAwait(false);
 
         return snapshot.Exists ? snapshot.ConvertTo<UserProfile>() : null;
+    }
+
+    public async Task<UserProfile?> FindByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return null;
+        }
+
+        var query = _collection.WhereEqualTo("email", email);
+        var snapshot = await query.GetSnapshotAsync(cancellationToken).ConfigureAwait(false);
+        var document = snapshot.Documents.FirstOrDefault();
+
+        return document?.ConvertTo<UserProfile>();
     }
 
     public async Task<bool> UpdateAsync(UserProfile profile, CancellationToken cancellationToken = default)

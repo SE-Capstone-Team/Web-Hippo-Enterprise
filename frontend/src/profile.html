@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hippo Exchange — Profile</title>
+  <title>Hippo Exchange - Profile</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -18,7 +18,7 @@
       <li><a class="nav-link" href="profile.html">Profile</a></li>
       <li><a class="nav-link" href="about.html">About</a></li>
       <li><a class="nav-link" href="contact.html">Contact</a></li>
-      <li><button class="nav-link logout-button" onclick="logout()">Log out</button></li>
+      <li><button class="nav-link logout-button" type="button" onclick="logout()">Log out</button></li>
     </ul>
   </nav>
 </header>
@@ -30,7 +30,7 @@
       <li><a class="sidebar-link" href="items.html"><i class="fas fa-box"></i> Items</a></li>
       <li><a class="sidebar-link" href="about.html"><i class="fas fa-info-circle"></i> About</a></li>
       <li><a class="sidebar-link" href="contact.html"><i class="fas fa-envelope"></i> Contact</a></li>
-      <button class="sidebar-link logout-button" onclick="logout()" type="button" aria-label="Log out"><i class="fas fa-sign-out-alt"></i> Log out</button></li>
+      <li><button class="sidebar-link logout-button" type="button" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Log out</button></li>
     </ul>
   </nav>
 </aside>
@@ -38,47 +38,44 @@
 <main class="container">
   <h2 class="section-title">My Profile</h2>
 
-  <!-- Message container -->
-  <div id="profile-messages"></div>
+  <div id="profile-messages" class="messages"></div>
 
-  <!-- Profile Card -->
   <div class="profile-card">
-    <img class="profile-image" src="images/BernardDaHippo.png" alt="Profile Image" />
+    <img class="profile-image" src="images/BernardDaHippo.png" alt="Profile" />
 
     <div class="profile-info">
-      <p>
-        <label>Name:</label>
-        <input id="profile-name" type="text" />
-      </p>
-      <p>
-        <label>Email:</label>
-        <input id="profile-email" type="email" />
-      </p>
-      <p>
-        <label>Role:</label>
-        <input id="profile-role" type="text" />
-      </p>
+      <label for="profile-name">Name</label>
+      <input id="profile-name" type="text" placeholder="First Last" />
 
-      <button id="save-profile" class="edit-btn">Save</button>
-      <button id="delete-profile" class="edit-btn" style="background:#ef4444;">Delete</button>
+      <label for="profile-email">Email</label>
+      <input id="profile-email" type="email" placeholder="name@example.com" />
+
+      <label for="profile-role">Role</label>
+      <input id="profile-role" type="text" placeholder="owner" />
+
+      <div class="profile-actions">
+        <button id="save-profile" class="edit-btn">Save</button>
+        <button id="delete-profile" class="edit-btn" style="background:#ef4444;">Delete</button>
+      </div>
     </div>
   </div>
 </main>
 
 <script>
-  const sidebar = document.getElementById('sidebar'); 
-  const toggle = document.getElementById('sidebar-toggle');
-  toggle?.addEventListener('click', () => {
-    const open = sidebar.classList.toggle('open');
-    toggle.setAttribute('aria-expanded', String(open));
-  });
+  (function registerSidebarToggle() {
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.getElementById('sidebar-toggle');
+    toggle?.addEventListener('click', () => {
+      const open = sidebar.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+  })();
 
   function logout() {
-    alert('You have been logged out.');
-    window.location.href = 'index.html'; 
+    window.localStorage.removeItem('hippo-user-id');
+    window.location.href = 'index.html';
   }
 </script>
-<script src="js/utils.js"></script>
-<script src="js/profile.js"></script>
+<script type="module" src="js/profile.js"></script>
 </body>
 </html>

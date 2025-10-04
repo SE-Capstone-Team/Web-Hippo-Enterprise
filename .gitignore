@@ -1,0 +1,11 @@
+# Build outputs
+backend/bin/
+backend/obj/
+backend/Data.Firestore/bin/
+backend/Data.Firestore/obj/
+
+# Editor history/backup
+.history/
+
+# Node-style dist if it appears later
+frontend/dist/

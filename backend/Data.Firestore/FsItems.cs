@@ -44,7 +44,7 @@ public sealed class FsItems
             Location = item.Location,
             Status = item.Status,
             Condition = item.Condition,
-            OwnerId = item.OwnerId,
+            OwnerUserId = item.OwnerUserId,
         };
 
         await _collection.Document(itemId)
@@ -111,14 +111,22 @@ public sealed class FsItems
         return FirestoreDb.Create(projectId);
     }
 
-    public async Task<IReadOnlyList<InventoryItem>> ListByOwnerAsync(string ownerId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<InventoryItem>> ListAsync(CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(ownerId))
+        var snapshot = await _collection.GetSnapshotAsync(cancellationToken).ConfigureAwait(false);
+        return snapshot.Documents
+            .Select(doc => doc.ConvertTo<InventoryItem>())
+            .ToList();
+    }
+
+    public async Task<IReadOnlyList<InventoryItem>> ListByOwnerAsync(string ownerUserId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(ownerUserId))
         {
             return Array.Empty<InventoryItem>();
         }
 
-        var query = _collection.WhereEqualTo("ownerId", ownerId);
+        var query = _collection.WhereEqualTo("ownerUserId", ownerUserId);
         var snapshot = await query.GetSnapshotAsync(cancellationToken).ConfigureAwait(false);
 
         return snapshot.Documents
@@ -152,6 +160,6 @@ public sealed class InventoryItem
     [FirestoreProperty("condition")]
     public string Condition { get; set; } = string.Empty;
 
-    [FirestoreProperty("ownerId")]
-    public string OwnerId { get; set; } = string.Empty;
+    [FirestoreProperty("ownerUserId")]
+    public string OwnerUserId { get; set; } = string.Empty;
 }

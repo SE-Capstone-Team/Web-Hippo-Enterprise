@@ -1,5 +1,7 @@
-﻿using Data.Firestore;
+using Data.Firestore;
 using Google.Cloud.Firestore;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,35 +15,34 @@ if (string.IsNullOrWhiteSpace(projectId))
 var databaseId = builder.Configuration["Firestore:DatabaseId"] ??
                  Environment.GetEnvironmentVariable("FIRESTORE_DATABASE_ID") ??
                  "inventory-db";
+
 builder.Services.AddSingleton<FsProfiles>();
 builder.Services.AddSingleton<FsItems>();
-
-builder.Services.AddSingleton(_ =>
+builder.Services.AddSingleton(_ => new FirestoreDbBuilder
 {
-    var fb = new FirestoreDbBuilder
-    {
-        ProjectId = projectId,
-        DatabaseId = databaseId
-    };
-    return fb.Build();
+    ProjectId = projectId,
+    DatabaseId = databaseId
+}.Build());
+
+const string DevCorsPolicy = "DevCors";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(DevCorsPolicy, policy =>
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod());
 });
 
-var MyCors = "_dev";
-builder.Services.AddCors(policy =>
+builder.Services.ConfigureHttpJsonOptions(options =>
 {
-    policy.AddDefaultPolicy(builder =>
-    {
-        builder.AllowAnyOrigin()
-               .AllowAnyMethod()
-               .AllowAnyHeader();
-    });
+    options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
 });
+
 var app = builder.Build();
-app.UseCors(MyCors);
 
+app.UseCors(DevCorsPolicy);
 app.Urls.Add("http://localhost:8000");
 
-// Configure static file serving for the frontend
 var frontendPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "frontend", "src");
 app.UseStaticFiles(new StaticFileOptions
 {
@@ -49,48 +50,64 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = ""
 });
 
-// API routes
 app.MapPost("/api/users", async (UserProfile profile, FsProfiles profiles, CancellationToken cancellationToken) =>
 {
     var created = await profiles.CreateAsync(profile, cancellationToken);
     return Results.Created($"/api/users/{created.UserId}", created);
 });
 
-app.MapGet("/api/users/{userId}", async (string userId, FsProfiles profiles, CancellationToken cancellationToken) =>
+app.MapGet("/api/users", async ([FromQuery] string? email, FsProfiles profiles, CancellationToken cancellationToken) =>
 {
-    var profile = await profiles.ReadAsync(userId, cancellationToken);
+    if (string.IsNullOrWhiteSpace(email))
+    {
+        return Results.BadRequest("Email query parameter is required.");
+    }
+
+    var profile = await profiles.FindByEmailAsync(email, cancellationToken);
     return profile is null ? Results.NotFound() : Results.Ok(profile);
 });
-app.MapGet("/api/users/{userId}/items", async (string userId, FirestoreDb db, CancellationToken cancellationToken) =>
+
+app.MapGet("/api/users/{ownerUserId}", async (string ownerUserId, FsProfiles profiles, CancellationToken cancellationToken) =>
 {
-    if (string.IsNullOrWhiteSpace(userId))
-    {
-        return Results.BadRequest("UserId cannot be null or empty.");
-    }
-    var collection = db.Collection("items");
-    var query = collection.WhereEqualTo("ownerId", userId);
-    var snapshot = await query.GetSnapshotAsync(cancellationToken);
-    var ownedItems = snapshot.Documents.Select(doc => doc.ConvertTo<InventoryItem>()).ToList();
-    return Results.Ok(ownedItems);
+    var profile = await profiles.ReadAsync(ownerUserId, cancellationToken);
+    return profile is null ? Results.NotFound() : Results.Ok(profile);
 });
 
-app.MapPut("/api/users/{userId}", async (string userId, UserProfile profile, FsProfiles profiles, CancellationToken cancellationToken) =>
+app.MapPut("/api/users/{ownerUserId}", async (string ownerUserId, UserProfile profile, FsProfiles profiles, CancellationToken cancellationToken) =>
 {
-    profile.UserId = userId;
+    profile.UserId = ownerUserId;
     var updated = await profiles.UpdateAsync(profile, cancellationToken);
     return updated ? Results.NoContent() : Results.NotFound();
 });
 
-app.MapDelete("/api/users/{userId}", async (string userId, FsProfiles profiles, CancellationToken cancellationToken) =>
+app.MapDelete("/api/users/{ownerUserId}", async (string ownerUserId, FsProfiles profiles, CancellationToken cancellationToken) =>
 {
-    var deleted = await profiles.DeleteAsync(userId, cancellationToken);
+    var deleted = await profiles.DeleteAsync(ownerUserId, cancellationToken);
     return deleted ? Results.NoContent() : Results.NotFound();
+});
+
+app.MapGet("/api/users/{ownerUserId}/items", async (string ownerUserId, [FromServices] FsItems items, CancellationToken cancellationToken) =>
+{
+    var list = await items.ListByOwnerAsync(ownerUserId, cancellationToken);
+    return Results.Ok(list);
 });
 
 app.MapPost("/api/items", async (InventoryItem item, FsItems items, CancellationToken cancellationToken) =>
 {
     var created = await items.CreateAsync(item, cancellationToken);
     return Results.Created($"/api/items/{created.ItemId}", created);
+});
+
+app.MapGet("/api/items", async ([FromQuery] string? ownerUserId, FsItems items, CancellationToken cancellationToken) =>
+{
+    if (!string.IsNullOrWhiteSpace(ownerUserId))
+    {
+        var list = await items.ListByOwnerAsync(ownerUserId, cancellationToken);
+        return Results.Ok(list);
+    }
+
+    var all = await items.ListAsync(cancellationToken);
+    return Results.Ok(all);
 });
 
 app.MapGet("/api/items/{itemId}", async (string itemId, FsItems items, CancellationToken cancellationToken) =>
@@ -101,9 +118,23 @@ app.MapGet("/api/items/{itemId}", async (string itemId, FsItems items, Cancellat
 
 app.MapPut("/api/items/{itemId}", async (string itemId, InventoryItem item, FsItems items, CancellationToken cancellationToken) =>
 {
+    var existing = await items.ReadAsync(itemId, cancellationToken);
+    if (existing is null)
+    {
+        return Results.NotFound();
+    }
+
     item.ItemId = itemId;
+    item.OwnerUserId = string.IsNullOrWhiteSpace(item.OwnerUserId) ? existing.OwnerUserId : item.OwnerUserId;
+    item.Name = string.IsNullOrWhiteSpace(item.Name) ? existing.Name : item.Name;
+    item.Picture = string.IsNullOrWhiteSpace(item.Picture) ? existing.Picture : item.Picture;
+    item.Location = string.IsNullOrWhiteSpace(item.Location) ? existing.Location : item.Location;
+    item.Condition = string.IsNullOrWhiteSpace(item.Condition) ? existing.Condition : item.Condition;
+    item.Status = string.IsNullOrWhiteSpace(item.Status) ? existing.Status : item.Status;
+    item.PricePerDay = Math.Abs(item.PricePerDay) < double.Epsilon ? existing.PricePerDay : item.PricePerDay;
+
     var updated = await items.UpdateAsync(item, cancellationToken);
-    return updated ? Results.NoContent() : Results.NotFound();
+    return updated ? Results.NoContent() : Results.Problem("Unable to update item.");
 });
 
 app.MapDelete("/api/items/{itemId}", async (string itemId, FsItems items, CancellationToken cancellationToken) =>
@@ -112,11 +143,12 @@ app.MapDelete("/api/items/{itemId}", async (string itemId, FsItems items, Cancel
     return deleted ? Results.NoContent() : Results.NotFound();
 });
 
-// Serve index.html for the root route and handle SPA routing
+app.MapGet("/", () => Results.Content(
+    "<html><body><h1>Welcome to Hippo Exchange!</h1></body></html>",
+    "text/html"));
+
 app.MapFallback(async context =>
 {
-    
-    // For root or any non-API route, serve index.html
     var indexPath = Path.Combine(frontendPath, "index.html");
     if (File.Exists(indexPath))
     {
