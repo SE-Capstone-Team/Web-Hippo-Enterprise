@@ -1,0 +1,6 @@
+# Stage 1: Use a standard Nginx image
+FROM nginx:alpine
+# Copy your entire 'src' directory (the static website)
+COPY frontend/src /usr/share/nginx/html
+# Nginx listens on port 80 inside the container by default.
+EXPOSE 80

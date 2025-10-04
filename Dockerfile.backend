@@ -1,0 +1,8 @@
+# Use the official ASP.NET Core Runtime image as the base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
+WORKDIR /app
+# Copy the contents of your pre-published directory
+COPY backend/publish-final/ .
+# The default ASP.NET Core port is 8080.
+EXPOSE 8080
+ENTRYPOINT ["dotnet", "backend.dll"]
