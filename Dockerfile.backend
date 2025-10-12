@@ -1,23 +1,17 @@
 # ---- Build stage ----
 FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 WORKDIR /src
-
-# Copy the entire backend tree so project references are present
 COPY backend/ ./backend/
-
-# If you have a solution file, you can restore via the .sln.
-# Otherwise, restoring from the main csproj is fine.
 WORKDIR /src/backend
 RUN dotnet restore
 
-# Publish
-RUN dotnet publish -c Release -o /out --no-restore
+# Disable Source Link so sourcelink.json isn't required
+RUN dotnet publish -c Release -o /out --no-restore \
+    -p:EnableSourceLink=false
 
-# ---- Runtime stage ----
+# ---- Runtime ----
 FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS final
 WORKDIR /app
 COPY --from=build /out .
 EXPOSE 8080
-
-# If your assembly isn't named backend.dll, change this to the correct DLL
 ENTRYPOINT ["dotnet", "backend.dll"]
