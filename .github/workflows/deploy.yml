@@ -24,8 +24,9 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
           APP_DIR: ${{ secrets.APP_DIR }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 "$SSH_USER@$SSH_HOST" bash -s << 'EOF'
+          ssh -i ~/.ssh/id_ed25519 "$SSH_USER@$SSH_HOST" bash -s -- "$APP_DIR" << 'EOF'
           set -euo pipefail
+          APP_DIR="$1"
           cd "$APP_DIR"
 
           # Ensure we're on main and up-to-date
