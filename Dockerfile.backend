@@ -1,18 +1,23 @@
-# Dockerfile.backend (multi-stage)
-# Build stage
-FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
+# ---- Build stage ----
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 WORKDIR /src
-# Copy only csproj first to leverage Docker layer caching
-COPY backend/*.csproj backend/
-RUN dotnet restore backend/*.csproj
-# Now copy the rest and publish
-COPY backend/ backend/
-RUN dotnet publish -c Release -o /out
 
-# Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
+# Copy the entire backend tree so project references are present
+COPY backend/ ./backend/
+
+# If you have a solution file, you can restore via the .sln.
+# Otherwise, restoring from the main csproj is fine.
+WORKDIR /src/backend
+RUN dotnet restore
+
+# Publish
+RUN dotnet publish -c Release -o /out --no-restore
+
+# ---- Runtime stage ----
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS final
 WORKDIR /app
 COPY --from=build /out .
 EXPOSE 8080
-# If your main DLL isn't named backend.dll, change *.dll handling or set the exact name
-ENTRYPOINT ["sh", "-c", "dotnet /app/*.dll"]
+
+# If your assembly isn't named backend.dll, change this to the correct DLL
+ENTRYPOINT ["dotnet", "backend.dll"]
