@@ -1,0 +1,43 @@
+name: Deploy on push to main
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Prepare SSH
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # Safely record the server's host key so SSH won't prompt
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Deploy via SSH
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          APP_DIR: ${{ secrets.APP_DIR }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 "$SSH_USER@$SSH_HOST" bash -s << 'EOF'
+          set -euo pipefail
+          cd "$APP_DIR"
+
+          # Ensure we're on main and up-to-date
+          git fetch --all
+          git reset --hard origin/main
+
+          # Rebuild and (only) restart changed services
+          docker compose build --pull
+          docker compose up -d --remove-orphans
+
+          # (Optional) Clean up dangling images to save disk
+          docker image prune -af || true
+          EOF
