@@ -4,31 +4,31 @@
 
 ### POST /api/users
 Creates a new user profile.
-- Body JSON: `firstName` (string), `lastName` (string), `email` (string), `role` (string), optional `userId` (string)
+- Body JSON: `firstName` (string), `lastName` (string), `email` (string), `address` (string), optional `ownerId` (string)
 - Success: `201 Created` with the saved profile and `Location` header
 
-### GET /api/users/{userId}
+### GET /api/users/{ownerId}
 Retrieves a user profile by its identifier.
-- Path parameter: `userId` (string)
+- Path parameter: `ownerId` (string)
 - Success: `200 OK` with the profile
 - Not found: `404 Not Found`
 
-### PUT /api/users/{userId}
+### PUT /api/users/{ownerId}
 Replaces the stored profile for the specified identifier.
-- Path parameter: `userId` (string)
-- Body JSON: `firstName`, `lastName`, `email`, `role`, optional `userId` (string that should match the path)
+- Path parameter: `ownerId` (string)
+- Body JSON: `firstName`, `lastName`, `email`, `address`, optional `ownerId` (string that should match the path)
 - Success: `204 No Content`
 - Not found: `404 Not Found`
 
-### DELETE /api/users/{userId}
+### DELETE /api/users/{ownerId}
 Deletes the profile for the given identifier.
-- Path parameter: `userId` (string)
+- Path parameter: `ownerId` (string)
 - Success: `204 No Content`
 - Not found: `404 Not Found`
 
 ### POST /api/items
 Creates a new inventory item.
-- Body JSON: `name` (string), `description` (string), `quantity` (int), `ownerUserId` (string), optional `itemId` (string)
+- Body JSON: `name` (string), `pricePerDay` (number), `picture` (string), `location` (string), `condition` (string), `isLent` (bool), `ownerId` (string), optional `itemId` (string)
 - Success: `201 Created` with the saved item and `Location` header
 
 ### GET /api/items/{itemId}
@@ -40,7 +40,7 @@ Retrieves an inventory item by its identifier.
 ### PUT /api/items/{itemId}
 Replaces the stored item data for the specified identifier.
 - Path parameter: `itemId` (string)
-- Body JSON: `name`, `description`, `quantity`, `ownerUserId`, optional `itemId` (string that should match the path)
+- Body JSON: `name`, `pricePerDay`, `picture`, `location`, `condition`, `isLent`, `ownerId`, optional `itemId` (string that should match the path)
 - Success: `204 No Content`
 - Not found: `404 Not Found`
 

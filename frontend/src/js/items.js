@@ -5,15 +5,24 @@ const MESSAGE_CONTAINER_ID = "items-messages";
 
 let itemsList;
 let addItemForm;
-let currentUserId;
+let currentOwnerId;
 
 document.addEventListener("DOMContentLoaded", () => {
   itemsList = document.getElementById("items-list");
   addItemForm = document.getElementById("add-item-form");
-  currentUserId = window.localStorage.getItem("hippo-user-id");
+  currentOwnerId = window.localStorage.getItem("hippo-owner-id");
 
-  if (!currentUserId) {
-    showMessage(MESSAGE_CONTAINER_ID, "Please log in before managing items.", "error");
+  if (!currentOwnerId) {
+    const legacyId = window.localStorage.getItem("hippo-user-id");
+    if (legacyId) {
+      currentOwnerId = legacyId;
+      window.localStorage.setItem("hippo-owner-id", legacyId);
+      window.localStorage.removeItem("hippo-user-id");
+    }
+  }
+
+  if (!currentOwnerId) {
+    showMessage(MESSAGE_CONTAINER_ID, "Please log in before managing items.", "error", { autoHide: false });
     disableForm();
     return;
   }
@@ -37,7 +46,7 @@ async function loadItems() {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/api/users/${currentUserId}/items`);
+    const res = await fetch(`${API_BASE}/api/users/${currentOwnerId}/items`);
     if (!res.ok) {
       throw new Error(await res.text() || "Failed to load items.");
     }
@@ -45,7 +54,8 @@ async function loadItems() {
     const items = await res.json();
     renderItems(items);
   } catch (err) {
-    showMessage(MESSAGE_CONTAINER_ID, err.message ?? "Unable to load items.", "error");
+    console.error(err);
+    showMessage(MESSAGE_CONTAINER_ID, err.message ?? "Unable to load items.", "error", { autoHide: false });
   }
 }
 
@@ -62,22 +72,43 @@ function renderItems(items) {
   }
 
   items.forEach(item => {
+    const isLent = Boolean(item?.isLent);
+    const borrowerId = (item?.borrowerId ?? "").trim();
+    const borrowedOn = formatDateTime(item?.borrowedOn);
+    const dueAt = formatDateTime(item?.dueAt);
+    const statusLabel = isLent ? "Loaned" : "Listed";
+    const statusClass = isLent ? "loaned" : "listed";
+    const pictureSrc = typeof item.picture === "string" && item.picture.trim()
+      ? item.picture.trim()
+      : "https://via.placeholder.com/320x200?text=Hippo+Exchange";
+    const itemName = (item?.name ?? "Item").toString();
+
+    const borrowerDetails = isLent
+      ? `
+        <div class="mine-meta subtle">Borrower ID: ${borrowerId || "Unknown"}</div>
+        <div class="mine-meta subtle">Borrowed on: ${borrowedOn}</div>
+        <div class="mine-meta subtle">Due: ${dueAt}</div>`
+      : '<div class="mine-meta subtle">Borrower: â€”</div>';
+
+    const primaryAction = isLent
+      ? `<button class="item-button" data-action="return" data-id="${item.itemId}">Mark as Returned</button>`
+      : `<button class="item-button" data-action="loan" data-id="${item.itemId}">Loan Item</button>`;
+
     const card = document.createElement("article");
     card.className = "mine-card";
     card.innerHTML = `
       <div class="thumb-wrap">
-        <img class="thumb" src="${item.picture || "images/placeholder.jpg"}" alt="${item.name}">
-        <span class="badge ${String(item.status || "").toLowerCase()}">${item.status ?? ""}</span>
+        <img class="thumb" src="${pictureSrc}" alt="${itemName}" referrerpolicy="no-referrer" loading="lazy">
+        <span class="badge ${statusClass}">${statusLabel}</span>
       </div>
       <div class="mine-body">
-        <div class="mine-title">${item.name}</div>
-        <div class="mine-meta">$${Number(item.pricePerDay || 0).toFixed(2)}/day · ${item.location || "Unknown"}</div>
+        <div class="mine-title">${itemName}</div>
+        <div class="mine-meta">$${Number(item.pricePerDay || 0).toFixed(2)}/day - ${item.location || "Unknown"}</div>
         <div class="mine-meta subtle">Condition: ${item.condition || "N/A"}</div>
+        ${borrowerDetails}
       </div>
       <div class="mine-actions">
-        <button class="item-button" data-action="toggle" data-id="${item.itemId}" data-status="${item.status || "Listed"}">
-          ${item.status === "Loaned" ? "Mark as Listed" : "Mark as Loaned"}
-        </button>
+        ${primaryAction}
         <button class="item-button delete" data-action="delete" data-id="${item.itemId}">Delete</button>
       </div>`;
 
@@ -96,18 +127,24 @@ async function handleAddItem(event) {
   }
 
   const formData = new FormData(addItemForm);
+  const isLentValue = (formData.get("isLent") ?? "false").toString();
   const payload = {
     name: (formData.get("name") ?? "").trim(),
     pricePerDay: Number(formData.get("pricePerDay") ?? 0),
     picture: (formData.get("picture") ?? "").toString().trim(),
     location: (formData.get("location") ?? "").toString().trim(),
-    status: (formData.get("status") ?? "Listed").toString(),
     condition: (formData.get("condition") ?? "").toString().trim(),
-    ownerUserId: currentUserId
+    isLent: isLentValue === "true",
+    ownerId: currentOwnerId
   };
 
   if (!payload.name) {
     showMessage(MESSAGE_CONTAINER_ID, "Item name is required.", "error");
+    return;
+  }
+
+  if (!Number.isFinite(payload.pricePerDay) || payload.pricePerDay < 0) {
+    showMessage(MESSAGE_CONTAINER_ID, "Price per day must be zero or greater.", "error");
     return;
   }
 
@@ -126,7 +163,8 @@ async function handleAddItem(event) {
     showMessage(MESSAGE_CONTAINER_ID, `Added "${payload.name}".`, "success");
     await loadItems();
   } catch (err) {
-    showMessage(MESSAGE_CONTAINER_ID, err.message ?? "Unable to add item.", "error");
+    console.error(err);
+    showMessage(MESSAGE_CONTAINER_ID, err.message ?? "Unable to add item.", "error", { autoHide: false });
   }
 }
 
@@ -135,43 +173,74 @@ async function handleItemAction(event) {
   const itemId = button.getAttribute("data-id");
   const action = button.getAttribute("data-action");
 
-  if (!itemId) {
+  if (!itemId || !action) {
     return;
   }
 
   if (action === "delete") {
     await deleteItem(itemId);
-  } else if (action === "toggle") {
-    const currentStatus = button.getAttribute("data-status") || "Listed";
-    const nextStatus = currentStatus === "Loaned" ? "Listed" : "Loaned";
-    await updateItemStatus(itemId, nextStatus);
+  } else if (action === "loan") {
+    await loanItem(itemId);
+  } else if (action === "return") {
+    await returnItem(itemId);
   }
 }
 
-async function updateItemStatus(itemId, status) {
-  try {
-    const existingRes = await fetch(`${API_BASE}/api/items/${itemId}`);
-    if (!existingRes.ok) {
-      throw new Error(await existingRes.text() || "Unable to load item for update.");
+async function loanItem(itemId) {
+  const borrowerIdInput = window.prompt("Enter the borrower's owner ID:");
+  if (!borrowerIdInput) {
+    showMessage(MESSAGE_CONTAINER_ID, "Borrower ID is required to loan an item.", "error");
+    return;
+  }
+
+  const borrowerId = borrowerIdInput.trim();
+  if (!borrowerId) {
+    showMessage(MESSAGE_CONTAINER_ID, "Borrower ID cannot be blank.", "error");
+    return;
+  }
+
+  const dueAtInput = window.prompt("Enter the due date (YYYY-MM-DD or ISO 8601). Leave blank if undecided.");
+  let dueAt = null;
+  if (dueAtInput) {
+    const dueDate = new Date(dueAtInput);
+    if (Number.isNaN(dueDate.getTime())) {
+      showMessage(MESSAGE_CONTAINER_ID, "Please enter a valid due date.", "error");
+      return;
     }
+    dueAt = dueDate.toISOString();
+  }
 
-    const existing = await existingRes.json();
-    const payload = { ...existing, status };
-
-    const res = await fetch(`${API_BASE}/api/items/${itemId}`, {
-      method: "PUT",
+  try {
+    const res = await fetch(`${API_BASE}/api/items/${itemId}/borrow`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ borrowerId, dueAt })
     });
 
     if (!res.ok) {
-      throw new Error(await res.text() || "Failed to update item.");
+      throw new Error(await res.text() || "Unable to loan item.");
     }
 
-    showMessage(MESSAGE_CONTAINER_ID, "Item status updated.", "success");
+    showMessage(MESSAGE_CONTAINER_ID, "Item loaned.", "success");
     await loadItems();
   } catch (err) {
-    showMessage(MESSAGE_CONTAINER_ID, err.message ?? "Unable to update item.", "error");
+    console.error(err);
+    showMessage(MESSAGE_CONTAINER_ID, err.message ?? "Unable to loan item.", "error", { autoHide: false });
+  }
+}
+
+async function returnItem(itemId) {
+  try {
+    const res = await fetch(`${API_BASE}/api/items/${itemId}/return`, { method: "POST" });
+    if (!res.ok) {
+      throw new Error(await res.text() || "Unable to mark item as returned.");
+    }
+
+    showMessage(MESSAGE_CONTAINER_ID, "Item marked as returned.", "success");
+    await loadItems();
+  } catch (err) {
+    console.error(err);
+    showMessage(MESSAGE_CONTAINER_ID, err.message ?? "Unable to mark item as returned.", "error", { autoHide: false });
   }
 }
 
@@ -185,6 +254,20 @@ async function deleteItem(itemId) {
     showMessage(MESSAGE_CONTAINER_ID, "Item deleted.", "success");
     await loadItems();
   } catch (err) {
-    showMessage(MESSAGE_CONTAINER_ID, err.message ?? "Unable to delete item.", "error");
+    console.error(err);
+    showMessage(MESSAGE_CONTAINER_ID, err.message ?? "Unable to delete item.", "error", { autoHide: false });
   }
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return "Not set";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "Not set";
+  }
+
+  return date.toLocaleString();
 }

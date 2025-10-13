@@ -9,12 +9,13 @@ namespace Data.Firestore;
 
 public sealed class FsItems
 {
+    // Firestore-backed repository for the `items` collection
     private const string CollectionName = "items";
     private readonly FirestoreDb _db;
     private readonly CollectionReference _collection;
 
     public FsItems(string projectId)
-        : this(CreateDb(projectId))
+        : this(CreateDb(projectId)) 
     {
     }
 
@@ -26,6 +27,7 @@ public sealed class FsItems
 
     public async Task<InventoryItem> CreateAsync(InventoryItem item, CancellationToken cancellationToken = default)
     {
+        // Persists a new inventory item. Validation is assumed to happen upstream
         if (item is null)
         {
             throw new ArgumentNullException(nameof(item));
@@ -35,6 +37,10 @@ public sealed class FsItems
             ? Guid.NewGuid().ToString()
             : item.ItemId;
 
+        var borrowerId = string.IsNullOrWhiteSpace(item.BorrowerId)
+            ? string.Empty
+            : item.BorrowerId;
+
         var payload = new InventoryItem
         {
             ItemId = itemId,
@@ -42,10 +48,22 @@ public sealed class FsItems
             PricePerDay = item.PricePerDay,
             Picture = item.Picture,
             Location = item.Location,
-            Status = item.Status,
+            IsLent = item.IsLent,
             Condition = item.Condition,
-            OwnerUserId = item.OwnerUserId,
+            OwnerId = item.OwnerId,
+            BorrowerId = borrowerId,
+            BorrowedOn = item.BorrowedOn,
+            DueAt = item.DueAt
         };
+
+        payload.IsLent = payload.IsLent && !string.IsNullOrWhiteSpace(payload.BorrowerId);
+
+        if (!payload.IsLent)
+        {
+            payload.BorrowerId = string.Empty;
+            payload.BorrowedOn = null;
+            payload.DueAt = null;
+        }
 
         await _collection.Document(itemId)
             .SetAsync(payload, cancellationToken: cancellationToken)
@@ -56,6 +74,7 @@ public sealed class FsItems
 
     public async Task<InventoryItem?> ReadAsync(string itemId, CancellationToken cancellationToken = default)
     {
+        // Fetches a single item document. Returns null for blank IDs to keep Firestore calls low.
         if (string.IsNullOrWhiteSpace(itemId))
         {
             return null;
@@ -70,6 +89,7 @@ public sealed class FsItems
 
     public async Task<bool> UpdateAsync(InventoryItem item, CancellationToken cancellationToken = default)
     {
+        // Uses Firestore's MergeAll to patch fields
         if (item is null)
         {
             throw new ArgumentNullException(nameof(item));
@@ -89,6 +109,7 @@ public sealed class FsItems
 
     public async Task<bool> DeleteAsync(string itemId, CancellationToken cancellationToken = default)
     {
+        // Deletes an item document by ID. Returns false for invalid IDs to avoid unnecessary Firestore calls
         if (string.IsNullOrWhiteSpace(itemId))
         {
             return false;
@@ -103,6 +124,7 @@ public sealed class FsItems
 
     private static FirestoreDb CreateDb(string projectId)
     {
+        // Factory helper mirrors FsProfiles
         if (string.IsNullOrWhiteSpace(projectId))
         {
             throw new ArgumentException("Project ID must be provided.", nameof(projectId));
@@ -113,20 +135,37 @@ public sealed class FsItems
 
     public async Task<IReadOnlyList<InventoryItem>> ListAsync(CancellationToken cancellationToken = default)
     {
+        // Loads the entire collection
         var snapshot = await _collection.GetSnapshotAsync(cancellationToken).ConfigureAwait(false);
         return snapshot.Documents
             .Select(doc => doc.ConvertTo<InventoryItem>())
             .ToList();
     }
 
-    public async Task<IReadOnlyList<InventoryItem>> ListByOwnerAsync(string ownerUserId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<InventoryItem>> ListByOwnerAsync(string ownerId, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(ownerUserId))
+        // Filtered load by owner
+        if (string.IsNullOrWhiteSpace(ownerId))
         {
             return Array.Empty<InventoryItem>();
         }
 
-        var query = _collection.WhereEqualTo("ownerUserId", ownerUserId);
+        var query = _collection.WhereEqualTo("ownerId", ownerId);
+        var snapshot = await query.GetSnapshotAsync(cancellationToken).ConfigureAwait(false);
+
+        return snapshot.Documents
+            .Select(doc => doc.ConvertTo<InventoryItem>())
+            .ToList();
+    }
+
+    public async Task<IReadOnlyList<InventoryItem>> ListByBorrowerAsync(string borrowerId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(borrowerId))
+        {
+            return Array.Empty<InventoryItem>();
+        }
+
+        var query = _collection.WhereEqualTo("borrowerId", borrowerId);
         var snapshot = await query.GetSnapshotAsync(cancellationToken).ConfigureAwait(false);
 
         return snapshot.Documents
@@ -154,12 +193,40 @@ public sealed class InventoryItem
     [FirestoreProperty("location")]
     public string Location { get; set; } = string.Empty;
 
-    [FirestoreProperty("status")]
-    public string Status { get; set; } = string.Empty;
+    [FirestoreProperty("isLent")]
+    public bool IsLent { get; set; } = false;
 
     [FirestoreProperty("condition")]
     public string Condition { get; set; } = string.Empty;
 
-    [FirestoreProperty("ownerUserId")]
-    public string OwnerUserId { get; set; } = string.Empty;
+    [FirestoreProperty("ownerId", ConverterType = typeof(FirestoreReferenceStringConverter))]
+    public string OwnerId { get; set; } = string.Empty;
+
+    [FirestoreProperty("borrowerId", ConverterType = typeof(FirestoreReferenceStringConverter))]
+    public string BorrowerId { get; set; } = string.Empty;
+
+    [FirestoreProperty("borrowedOn")]
+    public DateTime? BorrowedOn { get; set; }
+
+    [FirestoreProperty("dueAt")]
+    public DateTime? DueAt { get; set; }
+}
+
+internal sealed class FirestoreReferenceStringConverter : IFirestoreConverter<string>
+{
+    public string FromFirestore(object value)
+    {
+        return value switch
+        {
+            null => string.Empty,
+            string s => s,
+            DocumentReference reference => reference.Id,
+            _ => throw new InvalidOperationException($"Unable to convert Firestore value of type {value.GetType()} to string.")
+        };
+    }
+
+    public object ToFirestore(string value)
+    {
+        return value ?? string.Empty;
+    }
 }

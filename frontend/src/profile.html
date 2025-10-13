@@ -11,7 +11,6 @@
 <header>
   <nav class="navbar container" aria-label="Primary navigation">
     <a href="home.html" class="nav-logo">Hippo <span>Exchange</span></a>
-    <button id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false" aria-controls="sidebar"><i class="fas fa-bars"></i></button>
     <ul class="nav-menu">
       <li><a class="nav-link" href="home.html">Home</a></li>
       <li><a class="nav-link" href="items.html">Items</a></li>
@@ -41,7 +40,7 @@
   <div id="profile-messages" class="messages"></div>
 
   <div class="profile-card">
-    <img class="profile-image" src="images/BernardDaHippo.png" alt="Profile" />
+    <img id="profile-image" class="profile-image" src="images/BernardDaHippo.png" alt="Profile picture" />
 
     <div class="profile-info">
       <label for="profile-name">Name</label>
@@ -50,8 +49,14 @@
       <label for="profile-email">Email</label>
       <input id="profile-email" type="email" placeholder="name@example.com" />
 
+      <label for="profile-address">Home address</label>
+      <input id="profile-address" type="text" placeholder="123 Main St, City, ST" />
+
       <label for="profile-role">Role</label>
       <input id="profile-role" type="text" placeholder="owner" />
+
+      <label for="profile-pfp">Profile picture URL</label>
+      <input id="profile-pfp" type="url" placeholder="https://example.com/me.jpg" />
 
       <div class="profile-actions">
         <button id="save-profile" class="edit-btn">Save</button>
@@ -59,19 +64,16 @@
       </div>
     </div>
   </div>
+
+  <section class="borrowed-items">
+    <h3>Items I’m Borrowing</h3>
+    <div id="borrowed-items" class="items-grid"></div>
+  </section>
 </main>
 
 <script>
-  (function registerSidebarToggle() {
-    const sidebar = document.getElementById('sidebar');
-    const toggle = document.getElementById('sidebar-toggle');
-    toggle?.addEventListener('click', () => {
-      const open = sidebar.classList.toggle('open');
-      toggle.setAttribute('aria-expanded', String(open));
-    });
-  })();
-
   function logout() {
+    window.localStorage.removeItem('hippo-owner-id');
     window.localStorage.removeItem('hippo-user-id');
     window.location.href = 'index.html';
   }

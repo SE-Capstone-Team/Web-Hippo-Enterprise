@@ -8,6 +8,7 @@ namespace Data.Firestore;
 
 public sealed class FsProfiles
 {
+    // Firestore repository for managing user profile documents
     private const string CollectionName = "profiles";
     private readonly FirestoreDb _db;
     private readonly CollectionReference _collection;
@@ -25,39 +26,43 @@ public sealed class FsProfiles
 
     public async Task<UserProfile> CreateAsync(UserProfile profile, CancellationToken cancellationToken = default)
     {
+        // Inserts a new profile document
         if (profile is null)
         {
             throw new ArgumentNullException(nameof(profile));
         }
 
-        var userId = string.IsNullOrWhiteSpace(profile.UserId)
+        var ownerId = string.IsNullOrWhiteSpace(profile.OwnerId)
             ? Guid.NewGuid().ToString()
-            : profile.UserId;
+            : profile.OwnerId;
 
         var payload = new UserProfile
         {
-            UserId = userId,
-            FirstName = profile.FirstName,
-            LastName = profile.LastName,
-            Email = profile.Email,
-            Role = profile.Role,
+            OwnerId = ownerId,
+            FirstName = profile.FirstName ?? string.Empty,
+            LastName = profile.LastName ?? string.Empty,
+            Email = profile.Email ?? string.Empty,
+            Address = profile.Address ?? string.Empty,
+            Role = string.IsNullOrWhiteSpace(profile.Role) ? "owner" : profile.Role,
+            Pfp = (profile.Pfp ?? string.Empty).Trim()
         };
 
-        await _collection.Document(userId)
+        await _collection.Document(ownerId)
             .SetAsync(payload, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
 
         return payload;
     }
 
-    public async Task<UserProfile?> ReadAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<UserProfile?> ReadAsync(string ownerId, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(userId))
+        // Retrieves a profile by document ID. Returns null instead of throwing to simplify callers.
+        if (string.IsNullOrWhiteSpace(ownerId))
         {
             return null;
         }
 
-        var snapshot = await _collection.Document(userId)
+        var snapshot = await _collection.Document(ownerId)
             .GetSnapshotAsync(cancellationToken)
             .ConfigureAwait(false);
 
@@ -66,6 +71,7 @@ public sealed class FsProfiles
 
     public async Task<UserProfile?> FindByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
+        // Firestore query that finds the first profile with a matching email. Emails are stored as-is
         if (string.IsNullOrWhiteSpace(email))
         {
             return null;
@@ -80,31 +86,33 @@ public sealed class FsProfiles
 
     public async Task<bool> UpdateAsync(UserProfile profile, CancellationToken cancellationToken = default)
     {
+        // Full-document update
         if (profile is null)
         {
             throw new ArgumentNullException(nameof(profile));
         }
 
-        if (string.IsNullOrWhiteSpace(profile.UserId))
+        if (string.IsNullOrWhiteSpace(profile.OwnerId))
         {
             return false;
         }
 
-        await _collection.Document(profile.UserId)
+        await _collection.Document(profile.OwnerId)
             .SetAsync(profile, SetOptions.MergeAll, cancellationToken)
             .ConfigureAwait(false);
 
         return true;
     }
 
-    public async Task<bool> DeleteAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(string ownerId, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(userId))
+        // Thin wrapper around Firestore delete
+        if (string.IsNullOrWhiteSpace(ownerId))
         {
             return false;
         }
 
-        await _collection.Document(userId)
+        await _collection.Document(ownerId)
             .DeleteAsync(cancellationToken: cancellationToken)
             .ConfigureAwait(false);
 
@@ -125,8 +133,9 @@ public sealed class FsProfiles
 [FirestoreData]
 public sealed class UserProfile
 {
+    // Firestore DTO for a user's profile data.
     [FirestoreDocumentId]
-    public string UserId { get; set; } = string.Empty;
+    public string OwnerId { get; set; } = string.Empty;
 
     [FirestoreProperty("firstName")]
     public string FirstName { get; set; } = string.Empty;
@@ -137,6 +146,12 @@ public sealed class UserProfile
     [FirestoreProperty("email")]
     public string Email { get; set; } = string.Empty;
 
+    [FirestoreProperty("address")]
+    public string Address { get; set; } = string.Empty;
+
     [FirestoreProperty("role")]
-    public string Role { get; set; } = string.Empty;
+    public string Role { get; set; } = "owner";
+
+    [FirestoreProperty("pfp")]
+    public string Pfp { get; set; } = string.Empty;
 }

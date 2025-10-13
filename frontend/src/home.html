@@ -4,23 +4,51 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Hippo Exchange — Home</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <header class="top-header">
-    <h1 class="page-title">Hippo Exchange</h1>
-    <p class="helper">Borrow. Lend. Connect.</p>
+  <header>
+    <nav class="navbar container" aria-label="Primary navigation">
+      <a href="home.html" class="nav-logo">Hippo <span>Exchange</span></a>
+      <ul class="nav-menu">
+        <li><a class="nav-link" href="home.html">Home</a></li>
+        <li><a class="nav-link" href="items.html">Items</a></li>
+        <li><a class="nav-link" href="profile.html">Profile</a></li>
+        <li><a class="nav-link" href="about.html">About</a></li>
+        <li><a class="nav-link" href="contact.html">Contact</a></li>
+        <li><button class="nav-link logout-button" type="button" onclick="logout()">Log out</button></li>
+      </ul>
+    </nav>
   </header>
 
-  <main>
+  <aside id="sidebar" aria-label="Sidebar">
+    <nav class="sidebar-nav">
+      <ul>
+        <li><a class="sidebar-link" href="profile.html"><i class="fas fa-user"></i> Profile</a></li>
+        <li><a class="sidebar-link" href="items.html"><i class="fas fa-box"></i> Items</a></li>
+        <li><a class="sidebar-link" href="about.html"><i class="fas fa-info-circle"></i> About</a></li>
+        <li><a class="sidebar-link" href="contact.html"><i class="fas fa-envelope"></i> Contact</a></li>
+        <li><button class="sidebar-link logout-button" type="button" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Log out</button></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="container">
+    <header class="top-header">
+      <h1 class="page-title">Hippo Exchange</h1>
+      <p class="helper">Borrow. Lend. Connect.</p>
+    </header>
+
     <section class="home-section">
       <h2 class="section-title">Available Items</h2>
+      <div id="home-messages" class="messages"></div>
 
       <div class="item-carousel">
         <button class="scroll-btn left" id="scroll-left">&#10094;</button>
 
         <div id="items-list" class="item-scroll-container">
-          <!-- Items will be injected dynamically here -->
+          <!-- Items injected dynamically -->
         </div>
 
         <button class="scroll-btn right" id="scroll-right">&#10095;</button>
@@ -38,6 +66,13 @@
     <p>&copy; 2025 Hippo Exchange — All rights reserved.</p>
   </footer>
 
+  <script>
+    function logout() {
+      window.localStorage.removeItem('hippo-owner-id');
+      window.localStorage.removeItem('hippo-user-id');
+      window.location.href = 'index.html';
+    }
+  </script>
   <script type="module" src="js/home-items.js"></script>
 </body>
 </html>

@@ -62,25 +62,25 @@ async function handleLogin(event) {
   }
 
   try {
-    // For now, fetch all users (since backend doesn’t yet support ?email=)
-    const res = await fetch(`${API_BASE}/api/users`);
+    const res = await fetch(`${API_BASE}/api/users?email=${encodeURIComponent(email)}`);
+    if (res.status === 404) {
+      showMessage(messagesId, "No user found with that email.", "error", { autoHide: false });
+      return;
+    }
+
     if (!res.ok) {
       throw new Error("Unable to connect to the server.");
     }
 
-    const users = await res.json();
-    const foundUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+    const foundUser = await res.json();
 
-    if (foundUser) {
-      // For now, any password works (until Authentik integration)
-      localStorage.setItem("hippo-user-id", foundUser.userId);
-      showMessage(messagesId, "Login successful! Redirecting...", "success");
-      setTimeout(() => {
-        window.location.href = "home.html";
-      }, 700);
-    } else {
-      showMessage(messagesId, "No user found with that email.", "error", { autoHide: false });
-    }
+    // For now, any password works (until Authentik integration)
+    localStorage.setItem("hippo-owner-id", foundUser.ownerId);
+    localStorage.removeItem("hippo-user-id");
+    showMessage(messagesId, "Login successful! Redirecting...", "success");
+    setTimeout(() => {
+      window.location.href = "home.html";
+    }, 700);
   } catch (err) {
     console.error(err);
     showMessage(messagesId, err.message ?? "Unable to log in.", "error", { autoHide: false });
@@ -98,11 +98,13 @@ async function handleRegister(event) {
   const lastName = document.getElementById("reg-last-name")?.value.trim() ?? "";
   const email = document.getElementById("reg-email")?.value.trim() ?? "";
   const role = document.getElementById("reg-role")?.value.trim() || "owner";
+  const address = document.getElementById("reg-address")?.value.trim() ?? "";
+  const pfp = document.getElementById("reg-pfp")?.value.trim() ?? "";
   const password = document.getElementById("reg-password")?.value.trim() ?? "";
 
   // --- Frontend Validation ---
-  if (!firstName || !email || !password) {
-    showMessage(messagesId, "First name, email, and password are required.", "error", { autoHide: false });
+  if (!firstName || !email || !password || !address) {
+    showMessage(messagesId, "First name, email, home address, and password are required.", "error", { autoHide: false });
     return;
   }
 
@@ -111,7 +113,7 @@ async function handleRegister(event) {
     return;
   }
 
-  const payload = { firstName, lastName, email, role };
+  const payload = { firstName, lastName, email, role, address, pfp };
 
   try {
     const res = await fetch(`${API_BASE}/api/users`, {
@@ -125,7 +127,8 @@ async function handleRegister(event) {
     }
 
     const created = await res.json();
-    localStorage.setItem("hippo-user-id", created.userId);
+    localStorage.setItem("hippo-owner-id", created.ownerId);
+    localStorage.removeItem("hippo-user-id");
     showMessage(messagesId, "Account created! Redirecting to your profile...", "success");
     setTimeout(() => {
       window.location.href = "profile.html";

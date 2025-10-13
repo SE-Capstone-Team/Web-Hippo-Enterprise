@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hippo Exchange — Login & Registration</title>
+  <title>Hippo Exchange ï¿½ Login & Registration</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body, html {
@@ -107,7 +107,16 @@
           <select id="reg-role">
             <option value="owner" selected>Owner</option>
             <option value="borrower">Borrower</option>
+            <option value="both">Both</option>
           </select>
+        </div>
+        <div>
+          <label for="reg-address">Home address</label>
+          <input type="text" id="reg-address" placeholder="123 Main St, City, ST" />
+        </div>
+        <div>
+          <label for="reg-pfp">Profile picture URL</label>
+          <input type="url" id="reg-pfp" placeholder="https://example.com/me.jpg" />
         </div>
         <div>
           <label for="reg-password">Password</label>

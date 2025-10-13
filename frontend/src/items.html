@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hippo Exchange – Items</title>
+  <title>Hippo Exchange - Items</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -11,9 +11,6 @@
 <header>
   <nav class="navbar container" aria-label="Primary navigation">
     <a href="home.html" class="nav-logo">Hippo <span>Exchange</span></a>
-    <button id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false" aria-controls="sidebar">
-      <i class="fas fa-bars"></i>
-    </button>
     <ul class="nav-menu">
       <li><a class="nav-link" href="home.html">Home</a></li>
       <li><a class="nav-link" href="items.html">Items</a></li>
@@ -47,9 +44,9 @@
     <input type="number" id="item-price" name="pricePerDay" placeholder="Price per day ($)" min="0" step="0.01" required />
     <input type="url" id="item-picture" name="picture" placeholder="Picture URL" />
     <input type="text" id="item-location" name="location" placeholder="Location" required />
-    <select id="item-status" name="status" required>
-      <option value="Listed" selected>Listed</option>
-      <option value="Loaned">Loaned</option>
+    <select id="item-lent" name="isLent" required>
+      <option value="false" selected>Listed</option>
+      <option value="true">Loaned</option>
     </select>
     <input type="text" id="item-condition" name="condition" placeholder="Condition (e.g., New, Used)" required />
     <button type="submit" class="submit-button">Add Item</button>
@@ -60,18 +57,10 @@
 
 <script>
   function logout() {
+    window.localStorage.removeItem('hippo-owner-id');
     window.localStorage.removeItem('hippo-user-id');
     window.location.href = 'index.html';
   }
-
-  (function registerSidebarToggle() {
-    const sidebar = document.getElementById('sidebar');
-    const toggle = document.getElementById('sidebar-toggle');
-    toggle?.addEventListener('click', () => {
-      const open = sidebar.classList.toggle('open');
-      toggle.setAttribute('aria-expanded', String(open));
-    });
-  })();
 </script>
 <script type="module" src="js/items.js"></script>
 </body>
