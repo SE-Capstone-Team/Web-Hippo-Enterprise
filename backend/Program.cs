@@ -21,14 +21,21 @@ if (string.IsNullOrWhiteSpace(projectId))
     throw new InvalidOperationException("Firestore project ID is not configured. Set 'Firestore:ProjectId' in configuration or the 'GOOGLE_CLOUD_PROJECT' environment variable.");
 }
 
-// The Firestore emulator/database ID is optional; default keeps dev friction low.
 var databaseId = builder.Configuration["Firestore:DatabaseId"] ??
                  Environment.GetEnvironmentVariable("FIRESTORE_DATABASE_ID") ??
                  "inventory-db";
 
-// Register Firestore data access classes as singletons for dependency injection  
-builder.Services.AddSingleton<FsProfiles>();
-builder.Services.AddSingleton<FsItems>();
+// ✅ Create FirestoreDb first
+var db = new FirestoreDbBuilder
+{
+    ProjectId = projectId,
+    DatabaseId = databaseId
+}.Build();
+
+// ✅ Register Firestore and repositories
+builder.Services.AddSingleton(db);
+builder.Services.AddSingleton<FsProfiles>(sp => new FsProfiles(db));
+builder.Services.AddSingleton<FsItems>(sp => new FsItems(db));
 builder.Services.AddSingleton(_ => new FirestoreDbBuilder
 {
     ProjectId = projectId,
