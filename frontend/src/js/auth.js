@@ -2,6 +2,7 @@ import { showMessage } from "./utils.js";
 
 const API_BASE = "http://localhost:8000";
 const messagesId = "auth-messages";
+const MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024;
 
 const loginPanel = document.getElementById("login-panel");
 const registerPanel = document.getElementById("register-panel");
@@ -99,7 +100,8 @@ async function handleRegister(event) {
   const email = document.getElementById("reg-email")?.value.trim() ?? "";
   const role = document.getElementById("reg-role")?.value.trim() || "owner";
   const address = document.getElementById("reg-address")?.value.trim() ?? "";
-  const pfp = document.getElementById("reg-pfp")?.value.trim() ?? "";
+  const pfpInput = document.getElementById("reg-pfp");
+  const pfpFile = pfpInput?.files?.[0] ?? null;
   const password = document.getElementById("reg-password")?.value.trim() ?? "";
 
   // --- Frontend Validation ---
@@ -113,7 +115,44 @@ async function handleRegister(event) {
     return;
   }
 
-  const payload = { firstName, lastName, email, role, address, pfp };
+  let pfpUrl = "";
+
+  if (pfpFile) {
+    if (!pfpFile.type.startsWith("image/")) {
+      showMessage(messagesId, "Profile photo must be an image file.", "error", { autoHide: false });
+      return;
+    }
+
+    if (pfpFile.size > MAX_PROFILE_IMAGE_BYTES) {
+      showMessage(messagesId, "Profile photo must be smaller than 5MB.", "error", { autoHide: false });
+      return;
+    }
+
+    const uploadData = new FormData();
+    uploadData.append("file", pfpFile);
+    if (email) {
+      uploadData.append("ownerId", email);
+    }
+
+    showMessage(messagesId, "Uploading profile photo...", "info", { autoHide: true, timeout: 1500 });
+
+    const uploadRes = await fetch(`${API_BASE}/api/uploads/profiles`, {
+      method: "POST",
+      body: uploadData
+    });
+
+    if (!uploadRes.ok) {
+      throw new Error(await uploadRes.text() || "Unable to upload profile photo.");
+    }
+
+    const uploadPayload = await uploadRes.json();
+    pfpUrl = (uploadPayload?.url ?? "").toString().trim();
+    if (!pfpUrl) {
+      throw new Error("Profile photo upload did not return a download URL.");
+    }
+  }
+
+  const payload = { firstName, lastName, email, role, address, pfp: pfpUrl };
 
   try {
     const res = await fetch(`${API_BASE}/api/users`, {
@@ -130,6 +169,9 @@ async function handleRegister(event) {
     localStorage.setItem("hippo-owner-id", created.ownerId);
     localStorage.removeItem("hippo-user-id");
     showMessage(messagesId, "Account created! Redirecting to your profile...", "success");
+    if (pfpInput) {
+      pfpInput.value = "";
+    }
     setTimeout(() => {
       window.location.href = "profile.html";
     }, 700);

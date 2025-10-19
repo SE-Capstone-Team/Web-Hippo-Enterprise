@@ -2,6 +2,7 @@ import { showMessage } from "./utils.js";
 
 const API_BASE = "http://localhost:8000";
 const MESSAGE_CONTAINER_ID = "items-messages";
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB upload ceiling
 
 let itemsList;
 let addItemForm;
@@ -74,6 +75,10 @@ function renderItems(items) {
   items.forEach(item => {
     const isLent = Boolean(item?.isLent);
     const borrowerId = (item?.borrowerId ?? "").trim();
+    const borrowerName = (item?.borrowerName ?? "").trim();
+    const borrowerText = borrowerName && borrowerId
+      ? `${borrowerName} (${borrowerId})`
+      : borrowerName || borrowerId || "Unknown";
     const borrowedOn = formatDateTime(item?.borrowedOn);
     const dueAt = formatDateTime(item?.dueAt);
     const statusLabel = isLent ? "Loaned" : "Listed";
@@ -85,7 +90,7 @@ function renderItems(items) {
 
     const borrowerDetails = isLent
       ? `
-        <div class="mine-meta subtle">Borrower ID: ${borrowerId || "Unknown"}</div>
+        <div class="mine-meta subtle">Borrower: ${borrowerText}</div>
         <div class="mine-meta subtle">Borrowed on: ${borrowedOn}</div>
         <div class="mine-meta subtle">Due: ${dueAt}</div>`
       : '<div class="mine-meta subtle">Borrower: —</div>';
@@ -128,27 +133,76 @@ async function handleAddItem(event) {
 
   const formData = new FormData(addItemForm);
   const isLentValue = (formData.get("isLent") ?? "false").toString();
-  const payload = {
-    name: (formData.get("name") ?? "").trim(),
-    pricePerDay: Number(formData.get("pricePerDay") ?? 0),
-    picture: (formData.get("picture") ?? "").toString().trim(),
-    location: (formData.get("location") ?? "").toString().trim(),
-    condition: (formData.get("condition") ?? "").toString().trim(),
-    isLent: isLentValue === "true",
-    ownerId: currentOwnerId
-  };
+  const name = (formData.get("name") ?? "").trim();
+  const pricePerDay = Number(formData.get("pricePerDay") ?? 0);
+  const location = (formData.get("location") ?? "").toString().trim();
+  const condition = (formData.get("condition") ?? "").toString().trim();
 
-  if (!payload.name) {
+  if (!name) {
     showMessage(MESSAGE_CONTAINER_ID, "Item name is required.", "error");
     return;
   }
 
-  if (!Number.isFinite(payload.pricePerDay) || payload.pricePerDay < 0) {
+  if (!Number.isFinite(pricePerDay) || pricePerDay < 0) {
     showMessage(MESSAGE_CONTAINER_ID, "Price per day must be zero or greater.", "error");
     return;
   }
 
+  const imageInput = addItemForm.querySelector("#item-picture");
+  const imageFile = imageInput?.files?.[0] ?? null;
+
+  if (!imageFile) {
+    showMessage(MESSAGE_CONTAINER_ID, "Please select an image to upload.", "error");
+    return;
+  }
+
+  if (!imageFile.type.startsWith("image/")) {
+    showMessage(MESSAGE_CONTAINER_ID, "Only image files can be uploaded.", "error");
+    return;
+  }
+
+  if (imageFile.size > MAX_IMAGE_BYTES) {
+    showMessage(MESSAGE_CONTAINER_ID, "Images must be smaller than 5MB.", "error");
+    return;
+  }
+
+  let pictureUrl = "";
+
   try {
+    showMessage(MESSAGE_CONTAINER_ID, "Uploading image...", "info", { autoHide: true, timeout: 1500 });
+
+    const uploadData = new FormData();
+    uploadData.append("file", imageFile);
+    if (currentOwnerId) {
+      uploadData.append("ownerId", currentOwnerId);
+    }
+
+    const uploadRes = await fetch(`${API_BASE}/api/uploads/items`, {
+      method: "POST",
+      body: uploadData
+    });
+
+    if (!uploadRes.ok) {
+      throw new Error(await uploadRes.text() || "Unable to upload image.");
+    }
+
+    const uploadPayload = await uploadRes.json();
+    pictureUrl = (uploadPayload?.url ?? "").toString().trim();
+
+    if (!pictureUrl) {
+      throw new Error("Image upload did not return a download URL.");
+    }
+
+    const payload = {
+      name,
+      pricePerDay,
+      picture: pictureUrl,
+      location,
+      condition,
+      isLent: isLentValue === "true",
+      ownerId: currentOwnerId
+    };
+
     const res = await fetch(`${API_BASE}/api/items`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

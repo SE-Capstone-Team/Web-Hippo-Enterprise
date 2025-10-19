@@ -55,8 +55,9 @@
       <label for="profile-role">Role</label>
       <input id="profile-role" type="text" placeholder="owner" />
 
-      <label for="profile-pfp">Profile picture URL</label>
-      <input id="profile-pfp" type="url" placeholder="https://example.com/me.jpg" />
+      <label for="profile-pfp">Profile picture</label>
+      <input id="profile-pfp" type="file" accept="image/*" />
+      <p class="helper" id="profile-pfp-current">No image uploaded.</p>
 
       <div class="profile-actions">
         <button id="save-profile" class="edit-btn">Save</button>

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -82,6 +83,44 @@ public sealed class FsProfiles
         var document = snapshot.Documents.FirstOrDefault();
 
         return document?.ConvertTo<UserProfile>();
+    }
+
+    public async Task<IReadOnlyDictionary<string, UserProfile>> GetProfilesByIdsAsync(IEnumerable<string> ownerIds, CancellationToken cancellationToken = default)
+    {
+        if (ownerIds is null)
+        {
+            return new Dictionary<string, UserProfile>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        var ids = ownerIds
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Select(id => id.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (ids.Length == 0)
+        {
+            return new Dictionary<string, UserProfile>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        var snapshots = await Task.WhenAll(ids
+                .Select(id => _collection.Document(id).GetSnapshotAsync(cancellationToken)))
+            .ConfigureAwait(false);
+
+        var profiles = new Dictionary<string, UserProfile>(StringComparer.OrdinalIgnoreCase);
+        for (var i = 0; i < ids.Length; i++)
+        {
+            var snapshot = snapshots[i];
+            if (!snapshot.Exists)
+            {
+                continue;
+            }
+
+            var profile = snapshot.ConvertTo<UserProfile>();
+            profiles[ids[i]] = profile;
+        }
+
+        return profiles;
     }
 
     public async Task<bool> UpdateAsync(UserProfile profile, CancellationToken cancellationToken = default)

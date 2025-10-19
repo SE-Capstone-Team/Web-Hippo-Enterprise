@@ -1,5 +1,7 @@
+using Backend.Storage;
 using Data.Firestore;
 using Google.Cloud.Firestore;
+using Google.Cloud.Storage.V1;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using Microsoft.AspNetCore.StaticFiles;
@@ -7,6 +9,10 @@ using Microsoft.AspNetCore.StaticFiles;
 // Minimal API host that fronts the Firestore-backed Hippo Exchange inventory system.
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection("Storage"));
+builder.Services.AddSingleton(_ => StorageClient.Create());
+builder.Services.AddSingleton<FirebaseStorageService>();
 
 // ===============================
 // Firestore Configuration
@@ -131,52 +137,124 @@ app.MapDelete("/api/users/{ownerId}", async (string ownerId, FsProfiles profiles
 });
 
 // List all items owned by a specific user
-app.MapGet("/api/users/{ownerId}/items", async (string ownerId, FsItems items, CancellationToken cancellationToken) =>
+app.MapGet("/api/users/{ownerId}/items", async (string ownerId, FsItems items, FsProfiles profiles, CancellationToken cancellationToken) =>
 {
     var list = await items.ListByOwnerAsync(ownerId, cancellationToken);
-    return Results.Ok(list);
+    var response = await InventoryItemMapper.ToViewListAsync(list, profiles, cancellationToken);
+    return Results.Ok(response);
 });
 
 // List all items a user is currently borrowing
-app.MapGet("/api/users/{ownerId}/borrowing", async (string ownerId, FsItems items, CancellationToken cancellationToken) =>
+app.MapGet("/api/users/{ownerId}/borrowing", async (string ownerId, FsItems items, FsProfiles profiles, CancellationToken cancellationToken) =>
 {
     var list = await items.ListByBorrowerAsync(ownerId, cancellationToken);
-    return Results.Ok(list);
+    var response = await InventoryItemMapper.ToViewListAsync(list, profiles, cancellationToken);
+    return Results.Ok(response);
 });
 
 // ===============================
 // ITEM ROUTES
 // ===============================
 
-// Create item
-app.MapPost("/api/items", async (InventoryItem item, FsItems items, CancellationToken cancellationToken) =>
+app.MapPost("/api/uploads/items", async (HttpRequest request, FirebaseStorageService storage, CancellationToken cancellationToken) =>
 {
+    var form = await request.ReadFormAsync(cancellationToken);
+    var file = form.Files.GetFile("file");
+    if (file is null || file.Length == 0)
+    {
+        return Results.BadRequest("Image file is required.");
+    }
+
+    var ownerId = form.TryGetValue("ownerId", out var ownerValues)
+        ? ownerValues.ToString()
+        : null;
+
+    try
+    {
+        var result = await storage.UploadItemImageAsync(file, ownerId, cancellationToken);
+        return Results.Ok(new { url = result.Url, objectName = result.ObjectName });
+    }
+    catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+    {
+        return Results.BadRequest(ex.Message);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError);
+    }
+});
+
+app.MapPost("/api/uploads/profiles", async (HttpRequest request, FirebaseStorageService storage, CancellationToken cancellationToken) =>
+{
+    var form = await request.ReadFormAsync(cancellationToken);
+    var file = form.Files.GetFile("file");
+    if (file is null || file.Length == 0)
+    {
+        return Results.BadRequest("Profile image is required.");
+    }
+
+    var ownerHint = form.TryGetValue("ownerId", out var ownerValues)
+        ? ownerValues.ToString()
+        : null;
+
+    try
+    {
+        var result = await storage.UploadProfileImageAsync(file, ownerHint, cancellationToken);
+        return Results.Ok(new { url = result.Url, objectName = result.ObjectName });
+    }
+    catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+    {
+        return Results.BadRequest(ex.Message);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError);
+    }
+});
+
+// Create item
+app.MapPost("/api/items", async (InventoryItemRequest item, FsItems items, FsProfiles profiles, CancellationToken cancellationToken) =>
+{
+    if (item is null || string.IsNullOrWhiteSpace(item.OwnerId))
+    {
+        return Results.BadRequest("OwnerId is required.");
+    }
+
     var created = await items.CreateAsync(item, cancellationToken);
-    return Results.Created($"/api/items/{created.ItemId}", created);
+    var response = await InventoryItemMapper.ToViewAsync(created, profiles, cancellationToken);
+    return Results.Created($"/api/items/{created.ItemId}", response);
 });
 
 // Get all items or filter by OwnerId
-app.MapGet("/api/items", async ([FromQuery] string? ownerId, FsItems items, CancellationToken cancellationToken) =>
+app.MapGet("/api/items", async ([FromQuery] string? ownerId, FsItems items, FsProfiles profiles, CancellationToken cancellationToken) =>
 {
     if (!string.IsNullOrWhiteSpace(ownerId))
     {
         var list = await items.ListByOwnerAsync(ownerId, cancellationToken);
-        return Results.Ok(list);
+        var filtered = await InventoryItemMapper.ToViewListAsync(list, profiles, cancellationToken);
+        return Results.Ok(filtered);
     }
 
     var all = await items.ListAsync(cancellationToken);
-    return Results.Ok(all);
+    var response = await InventoryItemMapper.ToViewListAsync(all, profiles, cancellationToken);
+    return Results.Ok(response);
 });
 
 // Get specific item by ID
-app.MapGet("/api/items/{itemId}", async (string itemId, FsItems items, CancellationToken cancellationToken) =>
+app.MapGet("/api/items/{itemId}", async (string itemId, FsItems items, FsProfiles profiles, CancellationToken cancellationToken) =>
 {
     var item = await items.ReadAsync(itemId, cancellationToken);
-    return item is null ? Results.NotFound() : Results.Ok(item);
+    if (item is null)
+    {
+        return Results.NotFound();
+    }
+
+    var response = await InventoryItemMapper.ToViewAsync(item, profiles, cancellationToken);
+    return Results.Ok(response);
 });
 
 // Update existing item
-app.MapPut("/api/items/{itemId}", async (string itemId, InventoryItem item, FsItems items, CancellationToken cancellationToken) =>
+app.MapPut("/api/items/{itemId}", async (string itemId, InventoryItemRequest item, FsItems items, FirestoreDb db, CancellationToken cancellationToken) =>
 {
     var existing = await items.ReadAsync(itemId, cancellationToken);
     if (existing is null)
@@ -185,20 +263,29 @@ app.MapPut("/api/items/{itemId}", async (string itemId, InventoryItem item, FsIt
     }
 
     // Manual field-by-field patching to avoid overwriting with defaults
-    existing.OwnerId = string.IsNullOrWhiteSpace(item.OwnerId) ? existing.OwnerId : item.OwnerId;
+    if (!string.IsNullOrWhiteSpace(item.OwnerId))
+    {
+        existing.OwnerRef = db.Collection("profiles").Document(item.OwnerId.Trim());
+    }
+
     existing.Name = string.IsNullOrWhiteSpace(item.Name) ? existing.Name : item.Name;
     existing.Picture = string.IsNullOrWhiteSpace(item.Picture) ? existing.Picture : item.Picture;
     existing.Location = string.IsNullOrWhiteSpace(item.Location) ? existing.Location : item.Location;
     existing.Condition = string.IsNullOrWhiteSpace(item.Condition) ? existing.Condition : item.Condition;
     existing.PricePerDay = Math.Abs(item.PricePerDay) < double.Epsilon ? existing.PricePerDay : item.PricePerDay;
     existing.IsLent = item.IsLent;
-    existing.BorrowerId = string.IsNullOrWhiteSpace(item.BorrowerId) ? existing.BorrowerId : item.BorrowerId;
+
+    if (!string.IsNullOrWhiteSpace(item.BorrowerId))
+    {
+        existing.BorrowerRef = db.Collection("profiles").Document(item.BorrowerId.Trim());
+    }
+
     existing.BorrowedOn = item.BorrowedOn ?? existing.BorrowedOn;
     existing.DueAt = item.DueAt ?? existing.DueAt;
 
     if (!existing.IsLent)
     {
-        existing.BorrowerId = string.Empty;
+        existing.BorrowerRef = null;
         existing.BorrowedOn = null;
         existing.DueAt = null;
     }
@@ -208,7 +295,7 @@ app.MapPut("/api/items/{itemId}", async (string itemId, InventoryItem item, FsIt
 });
 
 // Mark an item as borrowed
-app.MapPost("/api/items/{itemId}/borrow", async (string itemId, BorrowRequest request, FsItems items, CancellationToken cancellationToken) =>
+app.MapPost("/api/items/{itemId}/borrow", async (string itemId, BorrowRequest request, FsItems items, FsProfiles profiles, FirestoreDb db, CancellationToken cancellationToken) =>
 {
     if (request is null || string.IsNullOrWhiteSpace(request.BorrowerId))
     {
@@ -226,17 +313,25 @@ app.MapPost("/api/items/{itemId}/borrow", async (string itemId, BorrowRequest re
         return Results.Conflict("Item is already borrowed.");
     }
 
+    var borrowerRef = db.Collection("profiles").Document(request.BorrowerId.Trim());
+
     item.IsLent = true;
-    item.BorrowerId = request.BorrowerId;
+    item.BorrowerRef = borrowerRef;
     item.BorrowedOn = request.BorrowedOn ?? DateTime.UtcNow;
     item.DueAt = request.DueAt;
 
     var updated = await items.UpdateAsync(item, cancellationToken);
-    return updated ? Results.Ok(item) : Results.Problem("Unable to mark item as borrowed.");
+    if (!updated)
+    {
+        return Results.Problem("Unable to mark item as borrowed.");
+    }
+
+    var response = await InventoryItemMapper.ToViewAsync(item, profiles, cancellationToken);
+    return Results.Ok(response);
 });
 
 // Mark an item as returned
-app.MapPost("/api/items/{itemId}/return", async (string itemId, FsItems items, CancellationToken cancellationToken) =>
+app.MapPost("/api/items/{itemId}/return", async (string itemId, FsItems items, FsProfiles profiles, CancellationToken cancellationToken) =>
 {
     var item = await items.ReadAsync(itemId, cancellationToken);
     if (item is null)
@@ -244,18 +339,24 @@ app.MapPost("/api/items/{itemId}/return", async (string itemId, FsItems items, C
         return Results.NotFound();
     }
 
-    if (!item.IsLent && string.IsNullOrWhiteSpace(item.BorrowerId))
+    if (!item.IsLent && item.BorrowerRef is null)
     {
         return Results.Conflict("Item is not currently borrowed.");
     }
 
     item.IsLent = false;
-    item.BorrowerId = string.Empty;
+    item.BorrowerRef = null;
     item.BorrowedOn = null;
     item.DueAt = null;
 
     var updated = await items.UpdateAsync(item, cancellationToken);
-    return updated ? Results.Ok(item) : Results.Problem("Unable to mark item as returned.");
+    if (!updated)
+    {
+        return Results.Problem("Unable to mark item as returned.");
+    }
+
+    var response = await InventoryItemMapper.ToViewAsync(item, profiles, cancellationToken);
+    return Results.Ok(response);
 });
 
 // Delete an item

@@ -76,9 +76,9 @@ h2.section-title { font-size: 2.2rem; text-align: center; margin-bottom: 24px; c
 
 /* Home: Public Catalog Cards */
 .items-list { display: flex; flex-wrap: wrap; gap: 30px; justify-content: center; }
-.item-card { background: #f8f9fa; border-radius: 15px; box-shadow: 0 0 10px rgba(147,185,225,.3); width: 280px; padding: 20px; text-align: center; transition: .3s; }
+.item-card { background: #f8f9fa; border-radius: 15px; box-shadow: 0 0 10px rgba(147,185,225,.3); width: 280px; padding: 20px 20px 28px; text-align: center; transition: .3s; }
 .item-card:hover { transform: translateY(-8px); box-shadow: 0 0 20px var(--primary-color); }
-.item-image { height: 180px; object-fit: cover; border-radius: 12px; margin-bottom: 15px; }
+.item-image { width: 100%; aspect-ratio: 1 / 1; object-fit: contain; border-radius: 16px; margin-bottom: 16px; display: block; background: inherit; }
 .item-name { font-weight: 700; font-size: 1.2rem; margin-bottom: 8px; }
 .item-price { color: #666; margin-bottom: 10px; }
 .item-button { background: var(--primary-color); color: #fff; padding: 10px 25px; border: 0; border-radius:0; font-weight: 600; cursor: pointer; }
@@ -130,11 +130,13 @@ h2.section-title { font-size: 2.2rem; text-align: center; margin-bottom: 24px; c
 }
 
 .item-card img {
-  width: 50%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 10px;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  object-fit: contain;
+  border-radius: 16px;
+  margin-bottom: 16px;
+  background: inherit;
 }
 
 .item-nav {
@@ -172,10 +174,10 @@ h2.section-title { font-size: 2.2rem; text-align: center; margin-bottom: 24px; c
 .add-item-form .submit-button { background: var(--primary-color); color: #fff; padding: 12px; border: 0; border-radius: 30px; font-weight: 600; cursor: pointer; }
 
 .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; max-width: 900px; margin: 0 auto; }
-.mine-card { background: #f8f9fa; border-radius: 14px; box-shadow: 0 0 10px rgba(147,185,225,.25); overflow: hidden; }
-.thumb-wrap { position: relative; }
-.thumb { width: 80%; height: 200px; object-fit: cover; display: block; }
-.badge { position: absolute; top: 10px; left: 10px; padding: 6px 10px; border-radius: 999px; font-weight: 700; font-size: .85rem; color: #fff; }
+.mine-card { background: #f8f9fa; border-radius: 14px; box-shadow: 0 0 10px rgba(147,185,225,.25); overflow: hidden; padding: 16px; }
+.thumb-wrap { position: relative; border-radius: 18px; overflow: hidden; margin-bottom: 14px; aspect-ratio: 1 / 1; background: inherit; }
+.thumb { width: 100%; height: 100%; object-fit: contain; display: block; background: inherit; }
+.badge { position: absolute; top: 14px; left: 14px; padding: 6px 10px; border-radius: 999px; font-weight: 700; font-size: .85rem; color: #fff; }
 .badge.listed { background: var(--primary-color); }
 .badge.loaned { background: #f59e0b; }
 .mine-body { padding: 14px; }
