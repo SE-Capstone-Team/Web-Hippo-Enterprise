@@ -83,6 +83,40 @@ h2.section-title { font-size: 2.2rem; text-align: center; margin-bottom: 24px; c
 .item-price { color: #666; margin-bottom: 10px; }
 .item-button { background: var(--primary-color); color: #fff; padding: 10px 25px; border: 0; border-radius:0; font-weight: 600; cursor: pointer; }
 
+/* Pagination Controls for Home Page */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 20px;
+}
+
+.page-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.page-btn:hover {
+  background-color: var(--hover-color);
+}
+
+.page-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.page-indicator {
+  font-weight: 600;
+  color: #5a6d85;
+}
+
 /* Adding missing Home Page Grid Layout */
 .item-scroll-container {
   display: grid;

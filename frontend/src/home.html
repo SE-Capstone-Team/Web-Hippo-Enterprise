@@ -6,69 +6,85 @@
   <title>Hippo Exchange — Home</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
   <link rel="stylesheet" href="css/style.css" />
+  <script type="module" src="js/home-items.js" defer></script>
 </head>
+
 <body>
 <header>
   <nav class="navbar container" aria-label="Primary navigation">
-    <a href="home.html" class="nav-logo">Hippo <span>Exchange</span></a>
+    <a href="home.html#home" class="nav-logo">Hippo <span>Exchange</span></a>
+    <button id="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="false" aria-controls="sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
     <ul class="nav-menu">
       <li><a class="nav-link" href="home.html">Home</a></li>
       <li><a class="nav-link" href="items.html">Items</a></li>
       <li><a class="nav-link" href="profile.html">Profile</a></li>
       <li><a class="nav-link" href="about.html">About</a></li>
       <li><a class="nav-link" href="contact.html">Contact</a></li>
-      <li><button class="nav-link logout-button" type="button" onclick="logout()">Log out</button></li>
     </ul>
   </nav>
 </header>
 
-  <aside id="sidebar" aria-label="Sidebar">
-    <nav class="sidebar-nav">
-      <ul>
-        <li><a class="sidebar-link" href="profile.html"><i class="fas fa-user"></i> Profile</a></li>
-        <li><a class="sidebar-link" href="items.html"><i class="fas fa-box"></i> Items</a></li>
-        <li><a class="sidebar-link" href="about.html"><i class="fas fa-info-circle"></i> About</a></li>
-        <li><a class="sidebar-link" href="contact.html"><i class="fas fa-envelope"></i> Contact</a></li>
-        <li><button class="sidebar-link logout-button" type="button" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Log out</button></li>
-      </ul>
-    </nav>
-  </aside>
+<aside id="sidebar" aria-label="Sidebar">
+  <nav class="sidebar-nav">
+    <ul>
+      <li><a class="sidebar-link" href="profile.html"><i class="fas fa-user"></i> Profile</a></li>
+      <li><a class="sidebar-link" href="items.html"><i class="fas fa-box"></i> Items</a></li>
+      <li><a class="sidebar-link" href="about.html"><i class="fas fa-info-circle"></i> About</a></li>
+      <li><a class="sidebar-link" href="contact.html"><i class="fas fa-envelope"></i> Contact</a></li>
+      <button class="sidebar-link logout-button" onclick="logout()" type="button" aria-label="Log out">
+        <i class="fas fa-sign-out-alt"></i> Log out
+      </button>
+    </ul>
+  </nav>
+</aside>
 
-  <main class="container">
+<main>
+  <section id="home" class="hero">
+    <div class="hero-inner">
+      <h1>Reliable Borrow & Loan</h1>
+      <p>Where Every Item Finds a New Home</p>
+      <a class="btn" href="#items">Borrow Item</a>
+      <a class="btn" href="items.html">Add Item</a>
+    </div>
+  </section>
 
-    <section class="home-section">
-      <h2 class="section-title">Available Items</h2>
-      <div id="home-messages" class="messages"></div>
+  <section id="items" class="container" aria-label="Available items">
+    <h2 class="section-title">Available Items to Borrow</h2>
 
-      <div class="item-carousel">
-        <button class="scroll-btn left" id="scroll-left">&#10094;</button>
+    <ul class="items-list" id="items-list">
+      <!-- Hidden template for cloning -->
+      <li class="item-card template" style="display: none;">
+        <img class="item-image" src="images/download.jpg" alt="Placeholder">
+        <h3 class="item-name">Item Name</h3>
+        <p class="item-price">$0/day</p>
+        <button class="item-button">Request</button>
+      </li>
+    </ul>
 
-        <div id="items-list" class="item-scroll-container">
-          <!-- Items injected dynamically -->
-        </div>
+    <!-- Pagination Controls -->
+    <div class="pagination-controls">
+      <button id="prev-page" class="page-btn" aria-label="Previous page">←</button>
+      <span id="page-indicator" class="page-indicator">Page 1</span>
+      <button id="next-page" class="page-btn" aria-label="Next page">→</button>
+    </div>
 
-        <button class="scroll-btn right" id="scroll-right">&#10095;</button>
-      </div>
+  </section>
+</main>
 
-      <div class="item-nav">
-        <button id="prev-page" class="nav-btn">&laquo; Previous</button>
-        <span id="page-indicator">Page 1</span>
-        <button id="next-page" class="nav-btn">Next &raquo;</button>
-      </div>
-    </section>
-  </main>
+<script>
+  const sidebar = document.getElementById('sidebar'); 
+  const toggle = document.getElementById('sidebar-toggle');
+  toggle?.addEventListener('click', () => {
+    const open = sidebar.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
+  });
 
-  <footer class="footer">
-    <p>&copy; 2025 Hippo Exchange — All rights reserved.</p>
-  </footer>
-
-  <script>
-    function logout() {
-      window.localStorage.removeItem('hippo-owner-id');
-      window.localStorage.removeItem('hippo-user-id');
-      window.location.href = 'index.html';
-    }
-  </script>
-  <script type="module" src="js/home-items.js"></script>
+  function logout() {
+    alert('You have been logged out.');
+    window.location.href = 'index.html'; 
+  }
+</script>
 </body>
 </html>
