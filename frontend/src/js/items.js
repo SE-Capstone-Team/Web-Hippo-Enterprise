@@ -132,11 +132,13 @@ async function handleAddItem(event) {
   }
 
   const formData = new FormData(addItemForm);
-  const isLentValue = (formData.get("isLent") ?? "false").toString();
   const name = (formData.get("name") ?? "").trim();
   const pricePerDay = Number(formData.get("pricePerDay") ?? 0);
-  const location = (formData.get("location") ?? "").toString().trim();
   const condition = (formData.get("condition") ?? "").toString().trim();
+
+  // Defaults
+  const location = "Listed";   // all new items are automatically listed
+  const isLentValue = "false"; // no more dropdown
 
   if (!name) {
     showMessage(MESSAGE_CONTAINER_ID, "Item name is required.", "error");

@@ -43,12 +43,16 @@
     <input type="text" id="item-name" name="name" placeholder="Item Name" required />
     <input type="number" id="item-price" name="pricePerDay" placeholder="Price per day ($)" min="0" step="0.01" required />
     <input type="file" id="item-picture" name="picture" accept="image/*" required />
-    <input type="text" id="item-location" name="location" placeholder="Location" required />
-    <select id="item-lent" name="isLent" required>
-      <option value="false" selected>Listed</option>
-      <option value="true">Loaned</option>
+
+    <!-- Removed location and lent dropdowns -->
+    <select id="item-condition" name="condition" required>
+      <option value="">Select condition</option>
+      <option value="New">New</option>
+      <option value="Used">Used</option>
+      <option value="Old">Old</option>
+      <option value="Decrepit">Decrepit</option>
     </select>
-    <input type="text" id="item-condition" name="condition" placeholder="Condition (e.g., New, Used)" required />
+
     <button type="submit" class="submit-button">Add Item</button>
   </form>
 
