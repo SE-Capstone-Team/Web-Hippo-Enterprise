@@ -314,18 +314,42 @@
         </div>
     </div>
 
-    <p class="link-to-register">Need to create an account? <a href="#" id="to-register-link">Click Here</a></p>
+    <p class="link-to-register" id="auth-footer-text">
+        Need to create an account? <a href="#" id="to-register-link">Click Here</a>
+    </p>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const toRegisterLink = document.getElementById('to-register-link');
-            toRegisterLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                document.getElementById('login-panel').classList.remove('active');
-                document.getElementById('register-panel').classList.add('active');
-            });
+  document.addEventListener('DOMContentLoaded', () => {
+    const toRegisterLink = document.getElementById('to-register-link');
+    const loginPanel = document.getElementById('login-panel');
+    const registerPanel = document.getElementById('register-panel');
+    const footerText = document.getElementById('auth-footer-text');
+
+    // Switch to registration form
+    toRegisterLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      loginPanel.classList.remove('active');
+      registerPanel.classList.add('active');
+
+      // Update footer text for registration page
+      footerText.innerHTML = `Already have an account? <a href="#" id="to-login-link">Log in here</a>`;
+      
+      // Re-bind event for going back to login
+      const toLoginLink = document.getElementById('to-login-link');
+      toLoginLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        registerPanel.classList.remove('active');
+        loginPanel.classList.add('active');
+        footerText.innerHTML = `Need to create an account? <a href="#" id="to-register-link">Click Here</a>`;
+        // Reconnect event again for switching back
+        document.getElementById('to-register-link').addEventListener('click', (ev) => {
+          ev.preventDefault();
+          toRegisterLink.click();
         });
-    </script>
+      });
+    });
+  });
+</script>
     <script type="module" src="js/auth.js"></script>
 </body>
 </html>

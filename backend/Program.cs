@@ -331,33 +331,15 @@ app.MapPost("/api/items/{itemId}/borrow", async (string itemId, BorrowRequest re
 });
 
 // Mark an item as returned
-app.MapPost("/api/items/{itemId}/return", async (string itemId, FsItems items, FsProfiles profiles, CancellationToken cancellationToken) =>
+app.MapPost("/api/items/{itemId}/return", async (string itemId, FsItems items) =>
 {
-    var item = await items.ReadAsync(itemId, cancellationToken);
-    if (item is null)
-    {
-        return Results.NotFound();
-    }
+    var success = await items.ReturnItemAsync(itemId);
+    if (!success)
+        return Results.NotFound(new { message = "Item not found or already available." });
 
-    if (!item.IsLent && item.BorrowerRef is null)
-    {
-        return Results.Conflict("Item is not currently borrowed.");
-    }
-
-    item.IsLent = false;
-    item.BorrowerRef = null;
-    item.BorrowedOn = null;
-    item.DueAt = null;
-
-    var updated = await items.UpdateAsync(item, cancellationToken);
-    if (!updated)
-    {
-        return Results.Problem("Unable to mark item as returned.");
-    }
-
-    var response = await InventoryItemMapper.ToViewAsync(item, profiles, cancellationToken);
-    return Results.Ok(response);
+    return Results.Ok(new { message = "Item returned successfully." });
 });
+
 
 // Delete an item
 app.MapDelete("/api/items/{itemId}", async (string itemId, FsItems items, CancellationToken cancellationToken) =>

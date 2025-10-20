@@ -245,6 +245,33 @@ public sealed class FsItems
         return results.Values.ToList();
     }
 
+        public async Task<bool> ReturnItemAsync(string itemId, CancellationToken cancellationToken = default)
+    {
+        // Marks an item as returned (available again)
+        if (string.IsNullOrWhiteSpace(itemId))
+            return false;
+
+        var docRef = _collection.Document(itemId);
+        var snapshot = await docRef.GetSnapshotAsync(cancellationToken).ConfigureAwait(false);
+        if (!snapshot.Exists)
+            return false;
+
+        // Clear borrowing fields
+        var updates = new Dictionary<string, object>
+        {
+            { "isLent", false },
+            { "borrowerId", FieldValue.Delete },
+            { "borrowedOn", FieldValue.Delete },
+            { "dueAt", FieldValue.Delete }
+        };
+
+        await docRef.UpdateAsync(updates, cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+
+        return true;
+    }
+
+
     private async Task<InventoryItem?> ConvertSnapshotAsync(DocumentSnapshot snapshot, CancellationToken cancellationToken)
     {
         if (snapshot is null || !snapshot.Exists)

@@ -236,3 +236,24 @@ h2.section-title { font-size: 2.2rem; text-align: center; margin-bottom: 24px; c
   color: #991b1b;
   border: 1px solid #ef4444;
 }
+/* Return Button (matches Save button styling) */
+.return-btn {
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  box-shadow: 0 2px 4px rgba(147, 185, 225, 0.3);
+}
+
+.return-btn:hover {
+  background-color: var(--hover-color);
+  transform: translateY(-1px);
+}
+
+.return-btn:active {
+  transform: translateY(0);
+}

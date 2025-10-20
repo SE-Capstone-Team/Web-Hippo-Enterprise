@@ -261,11 +261,47 @@ async function loadBorrowedItems() {
   }
 }
 
-function renderBorrowedItems(items, message) {
-  const container = document.getElementById(BORROWED_CONTAINER_ID);
-  if (!container) {
+async function returnItem(itemId) {
+  if (!ownerId || !itemId) {
+    showError("Invalid user or item ID.");
     return;
   }
+
+  if (!confirm("Are you sure you want to return this item?")) {
+    return;
+  }
+
+  try {
+    // tell backend to mark it as available again
+    const res = await fetch(`${API_BASE}/api/items/${itemId}/return`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ borrowerId: ownerId })
+    });
+
+    if (!res.ok) {
+      throw new Error(await res.text() || "Failed to return item.");
+    }
+
+    showSuccess("Item returned successfully!");
+
+    // Refresh borrowed items on profile
+    await loadBorrowedItems();
+
+    // Optional: if you want to instantly refresh home page when it’s open in another tab,
+    // you can store a flag in localStorage that home.html checks:
+    localStorage.setItem("hippo-refresh-items", "true");
+
+  } catch (err) {
+    console.error(err);
+    showError(err.message ?? "Unable to return item. Please try again.");
+  }
+}
+
+
+function renderBorrowedItems(items, message) {
+  const container = document.getElementById(BORROWED_CONTAINER_ID);
+  if (!container) return;
 
   if (message) {
     container.innerHTML = `<p class="empty-state">${message}</p>`;
@@ -278,15 +314,14 @@ function renderBorrowedItems(items, message) {
   }
 
   container.innerHTML = items.map(item => {
-    const picture = typeof item.picture === "string" && item.picture.trim()
+    const picture = (typeof item.picture === "string" && item.picture.trim())
       ? item.picture.trim()
       : "https://via.placeholder.com/320x200?text=Hippo+Exchange";
     const name = (item.name ?? "Item").toString();
     const borrowedOn = formatDateTime(item.borrowedOn);
     const dueAt = formatDateTime(item.dueAt);
-    const ownerName = (item.ownerName ?? "").toString().trim();
-    const ownerIdentifier = (item.ownerId ?? "").toString();
-    const lender = ownerName || ownerIdentifier || "Unknown";
+    const lender = (item.ownerName ?? item.ownerId ?? "Unknown").toString();
+    const itemId = item.itemId ?? item.id; // handle both field names
 
     return `
       <article class="mine-card">
@@ -298,10 +333,22 @@ function renderBorrowedItems(items, message) {
           <div class="mine-meta subtle">Lender: ${lender}</div>
           <div class="mine-meta subtle">Borrowed on: ${borrowedOn}</div>
           <div class="mine-meta subtle">Due: ${dueAt}</div>
+          <button class="return-btn" data-id="${itemId}">Return Item</button>
         </div>
       </article>`;
   }).join("");
+
+  // Attach click handlers for the Return buttons
+  container.querySelectorAll(".return-btn").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      const itemId = e.target.getAttribute("data-id");
+      if (itemId) {
+        await returnItem(itemId);
+      }
+    });
+  });
 }
+
 
 function formatDateTime(value) {
   if (!value) {
