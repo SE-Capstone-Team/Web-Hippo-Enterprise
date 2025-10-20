@@ -45,8 +45,10 @@ public sealed class FsProfiles
             Email = profile.Email ?? string.Empty,
             Address = profile.Address ?? string.Empty,
             Role = string.IsNullOrWhiteSpace(profile.Role) ? "owner" : profile.Role,
-            Pfp = (profile.Pfp ?? string.Empty).Trim()
+            Pfp = (profile.Pfp ?? string.Empty).Trim(),
+            Password = profile.Password ?? string.Empty
         };
+
 
         await _collection.Document(ownerId)
             .SetAsync(payload, cancellationToken: cancellationToken)
@@ -193,4 +195,7 @@ public sealed class UserProfile
 
     [FirestoreProperty("pfp")]
     public string Pfp { get; set; } = string.Empty;
+
+    [FirestoreProperty("password")]
+    public string Password { get; set; } = string.Empty;
 }
