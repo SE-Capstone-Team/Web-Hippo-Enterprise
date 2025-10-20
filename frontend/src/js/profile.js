@@ -1,6 +1,6 @@
 import { showMessage } from "./utils.js";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = "https://api.centralspiral.pro";
 const MESSAGES_ID = "profile-messages";
 const DEFAULT_PFP = "images/BernardDaHippo.png";
 const BORROWED_CONTAINER_ID = "borrowed-items";

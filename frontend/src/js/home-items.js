@@ -1,6 +1,6 @@
 import { showMessage } from "./utils.js";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = "https://api.centralspiral.pro";
 const itemsList = document.getElementById("items-list");
 const itemTemplate = document.querySelector(".item-card.template");
 

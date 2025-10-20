@@ -1,6 +1,6 @@
 import { showMessage } from "./utils.js";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = "https://api.centralspiral.pro";
 const MESSAGE_CONTAINER_ID = "items-messages";
 
 let itemsList;
