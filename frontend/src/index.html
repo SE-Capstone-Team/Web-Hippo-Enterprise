@@ -212,6 +212,32 @@
             color: #666;
             margin-top: 20px;
         }
+
+        .terms-agreement {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            color: #fff;
+            font-size: 14px;
+            margin-right: 300px;
+            white-space: nowrap;
+        }
+
+        .terms-agreement input[type="checkbox"] {
+            transform: scale(1.2);
+            accent-color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        .terms-agreement a {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        .terms-agreement a:hover {
+            color: #243946;
+        }
     </style>
 </head>
 <body>
@@ -234,7 +260,6 @@
                     <div>
                         <label for="login-password">Password</label>
                         <input type="password" id="login-password" placeholder="Enter password" required />
-                        <p class="helper">Passwords aren't checked yet; we'll wire Authentik soon.</p>
                     </div>
                     <button type="submit" class="submit-btn">Login</button>
                 </form>
@@ -274,7 +299,14 @@
                     <div>
                         <label for="reg-password">Password</label>
                         <input type="password" id="reg-password" placeholder="Create a password" required />
-                        <p class="helper">For now this is just stored locally until Authentik integration.</p>
+                    </div>
+                    <div class="terms-agreement">
+                        <input type="checkbox" id="agree-terms" required />
+                        <label for="agree-terms">
+                            I have read and agree to the
+                            <a href="terms.html" target="_blank">Terms &amp; Conditions</a> and
+                            <a href="privacy.html" target="_blank">Privacy Policy</a>.
+                        </label>
                     </div>
                     <button type="submit" class="submit-btn">Create Account</button>
                 </form>
