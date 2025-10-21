@@ -257,3 +257,86 @@ h2.section-title { font-size: 2.2rem; text-align: center; margin-bottom: 24px; c
 .return-btn:active {
   transform: translateY(0);
 }
+
+.bell-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #333;
+  cursor: pointer;
+  position: relative;
+}
+
+.bell-btn:hover {
+  color: #93B9E1;
+}
+
+.bell-badge {
+  position: absolute;
+  top: 2px;           /* Adjusts vertical placement */
+  right: 3px;         /* Slightly inside the bell edge */
+  width: 10px;        /* Fixed size */
+  height: 10px;       /* Fixed size */
+  background: red;
+  border-radius: 50%;
+  display: none;      /* Hidden until needed */
+  pointer-events: none; /* Prevents click issues */
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+  background-color: white;
+  margin: 10% auto;
+  padding: 25px;
+  border-radius: 12px;
+  width: 300px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.close-modal {
+  float: right;
+  font-size: 20px;
+  cursor: pointer;
+  color: #aaa;
+}
+
+.close-modal:hover {
+  color: #333;
+}
+
+#send-request-btn {
+  background-color: #93B9E1;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 15px;
+}
+/* Request modal */
+.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:2000; align-items:center; justify-content:center; }
+.modal-content { background:#fff; border-radius:14px; padding:20px; width:min(92vw,420px); box-shadow:0 10px 30px rgba(0,0,0,.25); position:relative; }
+.close-modal { position:absolute; right:14px; top:10px; font-size:22px; cursor:pointer; }
+#send-request-btn { margin-top:12px; background:var(--primary-color); color:#fff; border:0; padding:10px 16px; border-radius:8px; font-weight:600; }
+
+.bell-btn { background:none; border:none; font-size:1.2rem; cursor:pointer; padding:8px 10px; }
+#notifications-dropdown {
+  display:none; position:absolute; right:170px; top:80px; z-index:2100; background:#fff; border:1px solid #e5e7eb; border-radius:12px;
+  width:320px; box-shadow:0 12px 24px rgba(0,0,0,.12); padding:10px;
+}
+.request-row { padding:10px; border-radius:10px; background:#f8f9fa; margin-bottom:8px; }
+.request-row .row-actions { display:flex; gap:8px; margin-top:8px; }
+.request-row button { border:0; padding:8px 12px; border-radius:8px; font-weight:600; cursor:pointer; }
+.request-row .accept { background:#22c55e; color:#fff; }
+.request-row .deny { background:#ef4444; color:#fff; }

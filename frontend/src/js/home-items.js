@@ -15,16 +15,18 @@ const currentOwnerId =
 
 let items = [];
 let currentPage = 1;
-const itemsPerPage = 6; // number of cards to show at once
+const itemsPerPage = 6; // number of cards to show per page
 
+// ==========================
 // Load all items from backend
+// ==========================
 async function loadItems() {
   try {
     const res = await fetch(`${API_BASE}/api/items`);
     if (!res.ok) throw new Error(await res.text() || "Failed to load items.");
 
     items = await res.json();
-    currentPage = 1; // always reset to page 1 when reloading
+    currentPage = 1;
     renderItems();
   } catch (err) {
     console.error("Error loading items:", err);
@@ -37,11 +39,13 @@ async function loadItems() {
   }
 }
 
-// Render items for the current page
+// ==========================
+// Render items with pagination
+// ==========================
 function renderItems() {
   if (!itemsList || !itemTemplate) return;
 
-  // remove old cards except template
+  // Clear old cards
   itemsList.querySelectorAll(".item-card:not(.template)").forEach(el => el.remove());
 
   const totalPages = Math.max(1, Math.ceil(items.length / itemsPerPage));
@@ -49,7 +53,7 @@ function renderItems() {
   const end = start + itemsPerPage;
   const currentItems = items.slice(start, end);
 
-  // populate visible cards
+  // Populate visible cards
   currentItems.forEach(item => {
     const card = itemTemplate.cloneNode(true);
     card.classList.remove("template");
@@ -73,30 +77,122 @@ function renderItems() {
     } else {
       button.textContent = "Request";
       button.disabled = false;
-      button.onclick = () => alert(`Request sent for ${item.name}`);
+      button.onclick = () => openRequestModal(item);
     }
 
     itemsList.appendChild(card);
   });
 
-  // Update page controls
   updatePagination(totalPages);
 }
 
-// Update pagination controls (buttons + page number)
+// ==========================
+// Update pagination controls
+// ==========================
 function updatePagination(totalPages) {
   pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
   prevBtn.disabled = currentPage === 1;
   nextBtn.disabled = currentPage === totalPages;
 }
 
-// Scroll smoothly to the top of the section when changing pages
+// ==========================
+// Modal Logic (Borrow Request)
+// ==========================
+const modal = document.getElementById("request-modal");
+const closeModal = document.querySelector(".close-modal");
+const sendRequestBtn = document.getElementById("send-request-btn");
+const returnDateInput = document.getElementById("return-date");
+const modalItemName = document.getElementById("modal-item-name");
+
+let selectedItem = null;
+
+// Open modal for the selected item
+function openRequestModal(item) {
+  selectedItem = item;
+  modalItemName.textContent = `Requesting: ${item.name}`;
+  const today = new Date().toISOString().split("T")[0];
+  returnDateInput.min = today;
+  returnDateInput.value = today;
+  modal.style.display = "flex";
+}
+
+// Close modal helper
+function closeRequestModal() {
+  modal.style.display = "none";
+  returnDateInput.value = "";
+  selectedItem = null;
+}
+
+closeModal?.addEventListener("click", closeRequestModal);
+window.addEventListener("click", (e) => {
+  if (e.target === modal) closeRequestModal();
+});
+
+// Handle sending the borrow request
+sendRequestBtn?.addEventListener("click", async () => {
+  if (!selectedItem) return;
+
+  const dueStr = returnDateInput.value;
+  if (!dueStr) {
+    alert("Please select a return date.");
+    return;
+  }
+
+  const borrowerId =
+    localStorage.getItem("hippo-owner-id") ||
+    localStorage.getItem("hippo-user-id");
+
+  if (!borrowerId) {
+    alert("Please log in to request items.");
+    return;
+  }
+
+  try {
+    // Support both item.itemId or item.id, depending on API mapping
+    const itemId = selectedItem.itemId || selectedItem.id;
+    if (!itemId) {
+      console.error("Item missing ID:", selectedItem);
+      alert("Unable to identify this item. Try reloading.");
+      return;
+    }
+
+    const body = {
+      itemId,
+      borrowerId,
+      dueAt: new Date(dueStr).toISOString()
+    };
+
+    const res = await fetch(`${API_BASE}/api/requests`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    const text = await res.text(); // read response before checking ok
+    if (!res.ok) {
+      console.error("Backend error:", text);
+      throw new Error(text || "Failed to send request.");
+    }
+
+    alert(`Request sent for ${selectedItem.name}`);
+    closeRequestModal();
+  } catch (err) {
+    console.error("Request error:", err);
+    alert("Unable to send request. Check console for details.");
+  }
+});
+
+// ==========================
+// Scroll to top on pagination
+// ==========================
 function scrollToItemsTop() {
   const section = document.getElementById("items");
   if (section) section.scrollIntoView({ behavior: "smooth" });
 }
 
-// Button handlers
+// ==========================
+// Pagination buttons
+// ==========================
 prevBtn?.addEventListener("click", () => {
   if (currentPage > 1) {
     currentPage--;
@@ -114,5 +210,7 @@ nextBtn?.addEventListener("click", () => {
   }
 });
 
+// ==========================
 // Initial load
+// ==========================
 loadItems();

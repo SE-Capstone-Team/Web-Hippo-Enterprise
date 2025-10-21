@@ -5,6 +5,8 @@ using Google.Cloud.Storage.V1;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using Microsoft.AspNetCore.StaticFiles;
+using Backend.Models;
+
 
 // Minimal API host that fronts the Firestore-backed Hippo Exchange inventory system.
 
@@ -42,6 +44,7 @@ var db = new FirestoreDbBuilder
 builder.Services.AddSingleton(db);
 builder.Services.AddSingleton<FsProfiles>(sp => new FsProfiles(db));
 builder.Services.AddSingleton<FsItems>(sp => new FsItems(db));
+builder.Services.AddSingleton<FsRequests>(sp => new FsRequests(db));
 builder.Services.AddSingleton(_ => new FirestoreDbBuilder
 {
     ProjectId = projectId,
@@ -350,6 +353,94 @@ app.MapDelete("/api/items/{itemId}", async (string itemId, FsItems items, Cancel
 });
 
 // ===============================
+// BORROW REQUEST ROUTES
+// ===============================
+
+// Create a borrow request (borrower asks owner)
+app.MapPost("/api/requests", async (
+    CreateRequestDto dto,
+    FsItems items,
+    FsRequests requests,
+    FsProfiles profiles,
+    FirestoreDb db,
+    CancellationToken ct) =>
+{
+    if (dto is null || string.IsNullOrWhiteSpace(dto.ItemId) || string.IsNullOrWhiteSpace(dto.BorrowerId))
+        return Results.BadRequest("ItemId and BorrowerId are required.");
+
+    var item = await items.ReadAsync(dto.ItemId, ct);
+    if (item is null) return Results.NotFound("Item not found.");
+
+    var ownerId = item.OwnerRef?.Id ?? string.Empty;
+    if (string.IsNullOrWhiteSpace(ownerId))
+        return Results.BadRequest("Item has no owner.");
+
+    if (ownerId == dto.BorrowerId)
+        return Results.BadRequest("You cannot request your own item.");
+
+    if (item.IsLent) return Results.Conflict("Item is currently loaned.");
+
+    var entity = new BorrowRequestEntity
+    {
+        ItemId = item.ItemId,
+        ItemName = item.Name,
+        OwnerId = ownerId,
+        BorrowerId = dto.BorrowerId,
+        DueAt = dto.DueAt,
+        Status = "pending"
+    };
+
+    var created = await requests.CreateAsync(entity, ct);
+    return Results.Ok(created);
+});
+
+// Get pending requests for an owner (for bell dropdown)
+app.MapGet("/api/requests/owner/{ownerId}", async (string ownerId, FsRequests requests, CancellationToken ct) =>
+{
+    var list = await requests.ListForOwnerAsync(ownerId, ct);
+    return Results.Ok(list);
+});
+
+// Respond to a borrow request (accept or deny)
+app.MapPost("/api/requests/{requestId}/respond", async (
+    string requestId,
+    RespondRequestDto body,
+    FsRequests requests,
+    FsItems items,
+    FirestoreDb db,
+    CancellationToken ct) =>
+{
+    var req = await requests.ReadAsync(requestId, ct);
+    if (req is null) return Results.NotFound();
+
+    if (!string.Equals(req.Status, "pending", StringComparison.OrdinalIgnoreCase))
+        return Results.Conflict("Request is not pending.");
+
+    if (!body.Accepted)
+    {
+        await requests.UpdateStatusAsync(requestId, "denied", ct);
+        return Results.Ok(new { status = "denied" });
+    }
+
+    var item = await items.ReadAsync(req.ItemId, ct);
+    if (item is null) return Results.NotFound("Item not found.");
+    if (item.IsLent) return Results.Conflict("Item already loaned.");
+
+    var borrowerRef = db.Collection("profiles").Document(req.BorrowerId);
+    item.IsLent = true;
+    item.BorrowerRef = borrowerRef;
+    item.BorrowedOn = DateTime.UtcNow;
+    item.DueAt = req.DueAt;
+
+    var ok = await items.UpdateAsync(item, ct);
+    if (!ok) return Results.Problem("Failed to update item.");
+
+    await requests.UpdateStatusAsync(requestId, "accepted", ct);
+    return Results.Ok(new { status = "accepted" });
+});
+
+
+// ===============================
 // FRONTEND ROUTES
 // ===============================
 app.MapGet("/", () => Results.Content(
@@ -370,4 +461,3 @@ app.MapFallback(async context =>
 
 app.Run();
 
-internal sealed record BorrowRequest(string BorrowerId, DateTime? BorrowedOn, DateTime? DueAt);
