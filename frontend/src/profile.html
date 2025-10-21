@@ -18,7 +18,13 @@
       <li><a class="nav-link" href="about.html">About</a></li>
       <li><a class="nav-link" href="contact.html">Contact</a></li>
       <li><button class="nav-link logout-button" type="button" onclick="logout()">Log out</button></li>
-      <li><button id="notification-bell" class="bell-btn"><i class="fas fa-bell"></i></button></li>
+      <li>
+        <button id="notification-bell" class="bell-btn">
+          <i class="fas fa-bell"></i>
+          <span id="notification-badge" class="bell-badge" style="display:none;"></span>
+        </button>
+        <div id="notifications-dropdown" aria-label="Borrow Requests"></div>
+      </li>
     </ul>
   </nav>
 </header>
@@ -81,5 +87,6 @@
   }
 </script>
 <script type="module" src="js/profile.js"></script>
+<script type="module" src="js/notifications.js"></script>
 </body>
 </html>
