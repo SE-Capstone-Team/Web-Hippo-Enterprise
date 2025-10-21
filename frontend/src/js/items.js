@@ -97,7 +97,7 @@ function renderItems(items) {
 
     const primaryAction = isLent
       ? `<button class="item-button" data-action="return" data-id="${item.itemId}">Mark as Returned</button>`
-      : `<button class="item-button" data-action="loan" data-id="${item.itemId}">Loan Item</button>`;
+      : "";
 
     const card = document.createElement("article");
     card.className = "mine-card";
